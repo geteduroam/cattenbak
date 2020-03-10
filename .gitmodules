@@ -1,0 +1,3 @@
+[submodule "lib/git.sr.ht/eduroam/php-cat-client"]
+	path = lib/git.sr.ht/eduroam/php-cat-client
+	url = https://git.sr.ht/~eduroam/php-cat-client
