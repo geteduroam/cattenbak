@@ -101,6 +101,13 @@ class CattenbakApp
 	{
 		return $this->getOptionalArray( 'getEduroamProfiles' ) ?? [];
 	}
+	/**
+	 * @return array[]
+	 */
+	public function getGetExtraIdps(): array
+	{
+		return $this->getOptionalArray( 'extraIdps' ) ?? [];
+	}
 
 	protected function getOptionalInt( string $key ): ?int
 	{

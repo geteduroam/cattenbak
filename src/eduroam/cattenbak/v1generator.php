@@ -17,7 +17,7 @@ class V1Generator extends Generator
 {
 	public function generate(): array
 	{
-		$instances = [];
+		$instances = $this->getApp()->getGetExtraIdps();
 		foreach ( $this->getIdpsForCountries() as $idp ) {
 			if ( \in_array( $idp->getEntityID(), $this->getApp()->getHiddenInstitutions(), true ) ) {
 				continue;

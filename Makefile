@@ -1,7 +1,7 @@
-disco/v1: src/eduroam/cat
+disco/v1: src/eduroam/cat etc/cattenbak.conf.php
 	php bin/generate.php
 
-disco/v2: src/eduroam/cat
+disco/v2: src/eduroam/cat etc/cattenbak.conf.php
 	php bin/generatev2.php
 
 camera-ready: src/eduroam/cat syntax codestyle phpunit psalm phan

@@ -1,6 +1,20 @@
-<?php return [
+<?php
+function geteduroamProfile( $name ) {
+	return [
+			"id" => "${name}_geteduroam_no",
+			"name" => "geteduroam",
+			"default" => true,
+			"eapconfig_endpoint" => "https://geteduroam.no/generate.php",
+			"token_endpoint" => "https://geteduroam.no/token.php",
+			"authorization_endpoint" => "https://geteduroam.no/authorize.php",
+			"oauth" => true,
+		];
+}
+
+
+return [
 	'versions' => [1, 2],
-	'seq' => 9,
+	'seq' => 10,
 	'countries' => ['NO', 'ES', 'NL', 'SE', 'DK', 'FI', 'IS'],
 	'languages' => ['en', 'nb', 'es' /*, 'nl' */],
 	'keywords' => [
@@ -11,18 +25,17 @@
 			275 => ['hin'],
 			297 => ['uio', 'Oslo'],
 		],
-	'getEduroamProfiles' => [
-		9 => [
-				[
-					"id" => "geteduroam_no",
-					"name" => "Mobile Device",
-					"default" => true,
-					"eapconfig_endpoint" => "https://geteduroam.no/generate.php",
-					"token_endpoint" => "https://geteduroam.no/token.php",
-					"authorization_endpoint" => "https://geteduroam.no/authorize.php",
-					"oauth" => true,
-				],
+	'extraIdps' => [
+			[
+				'name' => 'NORDUnet',
+				'country' => 'DK',
+				'cat_id' => NULL,
+				'profiles' => [geteduroamProfile('nordu')],
 			],
+		],
+	'getEduroamProfiles' => [
+			9 => [geteduroamProfile('uninett')],
+			1643 => [geteduroamProfile('sunet')],
 		],
 	'hiddenProfiles' => [
 			//10, // 9 Uninett Uninett
@@ -30,7 +43,7 @@
 			4306, // 9 Uninett geteduroam
 		],
 	'hiddenInstitutes' => [
-		//9, Uninett
-	],
+			//9, Uninett
+		],
 	'cacheTime' => 604800,
 ];
