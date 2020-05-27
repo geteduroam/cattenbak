@@ -1,5 +1,5 @@
 disco/v1: src/eduroam/cat etc/cattenbak.conf.php
-	php bin/generate.php
+	php -d memory_limit=1023M bin/generate.php
 
 disco/v2: src/eduroam/cat etc/cattenbak.conf.php
 	php bin/generatev2.php
