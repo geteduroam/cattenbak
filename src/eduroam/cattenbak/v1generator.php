@@ -23,7 +23,9 @@ class V1Generator extends Generator
 				continue;
 			}
 			$profiles = $this->fetchProfileDataForIdP( $idp );
-			$instances[] = $this->getIdPData( $idp ) + ['profiles' => $profiles];
+			if ( \count( $profiles ) > 0 ) {
+				$instances[] = $this->getIdPData( $idp ) + ['profiles' => $profiles];
+			}
 		}
 		\usort($instances, [$this, 'idpSorter']);
 
@@ -106,10 +108,15 @@ class V1Generator extends Generator
 		// UTF-8 special characters will always have their first byte outside the a-z range,
 		// so that's all we have to check for.
 		$modifier = 0;
-		$oa = ord( substr( $a['name'], 0, 1 ) ) & 0x5f;
-		$ob = ord( substr( $b['name'], 0, 1 ) ) & 0x5f;
-		if ( $oa < 0x41 || $oa > 0x5a ) $modifier += 255;
-		if ( $ob < 0x41 || $ob > 0x5a ) $modifier -= 255;
-		return strcasecmp( $a['name'], $b['name'] ) + $modifier;
+		$oa = \ord( \substr( $a['name'], 0, 1 ) ) & 0x5f;
+		$ob = \ord( \substr( $b['name'], 0, 1 ) ) & 0x5f;
+		if ( $oa < 0x41 || $oa > 0x5a ) {
+			$modifier += 255;
+		}
+		if ( $ob < 0x41 || $ob > 0x5a ) {
+			$modifier -= 255;
+		}
+
+		return \strcasecmp( $a['name'], $b['name'] ) + $modifier;
 	}
 }

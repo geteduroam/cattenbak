@@ -101,6 +101,7 @@ class CattenbakApp
 	{
 		return $this->getOptionalArray( 'getEduroamProfiles' ) ?? [];
 	}
+
 	/**
 	 * @return array[]
 	 */
