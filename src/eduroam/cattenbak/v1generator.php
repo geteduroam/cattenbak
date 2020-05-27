@@ -97,6 +97,19 @@ class V1Generator extends Generator
 
 	private function idpSorter( array $a, array $b ): int
 	{
-		return (int)( $a['cat_idp'] ) - (int)( $b['cat_idp'] );
+		// We take the first byte of every string, and check if it is in a-z (insensitive)
+		// This allows us to place a lot of institutions that start with a number at the end of the list.
+		// In ASCII, numbers come before letters, so otherwise they would have been placed at the start
+		//
+		// We don't need to take UTF-8 into account here, we just see names that start with UTF-8
+		// as non-letters, so they are also placed at the end of the list
+		// UTF-8 special characters will always have their first byte outside the a-z range,
+		// so that's all we have to check for.
+		$modifier = 0;
+		$oa = ord( substr( $a['name'], 0, 1 ) ) & 0x5f;
+		$ob = ord( substr( $b['name'], 0, 1 ) ) & 0x5f;
+		if ( $oa < 0x41 || $oa > 0x5a ) $modifier += 255;
+		if ( $ob < 0x41 || $ob > 0x5a ) $modifier -= 255;
+		return strcasecmp( $a['name'], $b['name'] ) + $modifier;
 	}
 }
