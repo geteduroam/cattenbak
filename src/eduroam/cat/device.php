@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
 /*
- * This file is part of the Cattenbak
- * The discovery file generator for geteduroam
+ * This file is part of the PHP eduroam CAT client
+ * A client to download data from https://cat.eduroam.org/
  *
- * Copyright: 2020, Jørn Åne de Jong, Uninett AS <jorn.dejong@uninett.no>
- * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright: 2018-2020, Jørn Åne de Jong, Uninett AS <jorn.dejong@uninett.no>
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace eduroam\CAT;

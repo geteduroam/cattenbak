@@ -1,11 +1,11 @@
 <?php declare(strict_types=1);
 
 /*
- * This file is part of the Cattenbak
- * The discovery file generator for geteduroam
+ * This file is part of the PHP eduroam CAT client
+ * A client to download data from https://cat.eduroam.org/
  *
- * Copyright: 2020, Jørn Åne de Jong, Uninett AS <jorn.dejong@uninett.no>
- * SPDX-License-Identifier: BSD-3-Clause
+ * Copyright: 2018-2020, Jørn Åne de Jong, Uninett AS <jorn.dejong@uninett.no>
+ * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
 namespace eduroam\CAT;
@@ -249,15 +249,25 @@ class IdentityProvider
 	 * This function returns a list of objects that have <code>lat</code> and <code>lon</code> properties.
 	 * If no geolocation information is known, it returns an empty array.
 	 *
+	 * @param ?int $precision The optional number of decimal digits to round to (omit for no rounding)
+	 * @param int  $mode      Use one of the following constants to specify the mode in which rounding occurs
+	 *
+	 * @see http://php.net/round
+	 *
 	 * @return stdClass[] Objects with lat and lon
 	 */
-	public function getGeo(): array
+	public function getGeo( ?int $precision = null, int $mode = \PHP_ROUND_HALF_UP ): array
 	{
 		$idp = $this->getRaw();
 		foreach ( $idp->geo ?? [] as $geo ) {
 			if ( \is_numeric( $geo->lat ) && \is_numeric( $geo->lon ) ) {
-				$geo->lat = (float)$geo->lat;
-				$geo->lon = (float)$geo->lon;
+				if ( null === $precision ) {
+					$geo->lat = (float)$geo->lat;
+					$geo->lon = (float)$geo->lon;
+				} else {
+					$geo->lat = \round( (float)$geo->lat, $precision, $mode );
+					$geo->lon = \round( (float)$geo->lon, $precision, $mode );
+				}
 			}
 		}
 

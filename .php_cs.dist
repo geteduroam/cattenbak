@@ -1,6 +1,7 @@
 <?php declare(strict_types=1);
 $finder = PhpCsFixer\Finder::create()
 	->in(__DIR__ . DIRECTORY_SEPARATOR . 'src')
+	->notPath(__DIR__ . implode(DIRECTORY_SEPARATOR, ['src', 'eduroam', 'cat']))
 	->in(__DIR__ . DIRECTORY_SEPARATOR . 'tests')
 	->in(__DIR__ . DIRECTORY_SEPARATOR . '.phan')
 	->notName('_autoload.php')
