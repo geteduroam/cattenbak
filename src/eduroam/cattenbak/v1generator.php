@@ -71,6 +71,7 @@ class V1Generator extends Generator
 			'name' => $idp->getTitle(),
 			'country' => $idp->getCountry(),
 			'cat_idp' => $idp->getEntityID(),
+			'geo' => $idp->getGeo( 3 ), /* round by 3 digits, see xkcd#2170 */
 		];
 	}
 
