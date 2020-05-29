@@ -94,7 +94,12 @@ class V1Generator extends Generator
 	protected function writeFiles( string $dir ): void
 	{
 		$seq = $this->getApp()->getSeq();
-		$this->writeFile( "${dir}/discovery-${seq}.json", $this->jsonEncode( $this->generate() ) );
+		$json = $this->jsonEncode( $this->generate() );
+		$gzip = $this->gzCompress( $json );
+		$this->writeFile( "${dir}/discovery-${seq}.json", $json );
+		if ( null !== $gzip ) {
+			$this->writeFile( "${dir}/discovery-${seq}.json.gz", $gzip );
+		}
 	}
 
 	private function idpSorter( array $a, array $b ): int

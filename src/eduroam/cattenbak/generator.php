@@ -10,6 +10,8 @@
 
 namespace eduroam\Cattenbak;
 
+use RuntimeException;
+
 abstract class Generator
 {
 	/** @var CattenbakApp */
@@ -56,7 +58,19 @@ abstract class Generator
 	 */
 	protected static function jsonEncode( $data ): string
 	{
-		return \json_encode( $data, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES | \JSON_UNESCAPED_UNICODE ) . "\n";
+		// I would have added JSON_UNESCAPED_UNICODE as well,
+		// but this raised the size of the gzip compressed file
+		$result = \json_encode( $data, \JSON_UNESCAPED_SLASHES );
+		if ( false === $result ) {
+			throw new RuntimeException( 'Unable to serialize data to JSON' );
+		}
+
+		return $result;
+	}
+
+	protected static function gzCompress( string $data ): ?string
+	{
+		return \gzencode( $data, 9, \FORCE_GZIP ) ?: null;
 	}
 
 	protected function writeFile( string $file, string $contents ): void
