@@ -356,6 +356,22 @@ class Profile
 
 		return true;
 	}
+	/**
+	 * Attempt to get the redirect url for this profile.
+	 *
+	 * @return ?string The redirect URL
+	 */
+	public function getRedirectUrl(): ?string{
+		$raw = $this->getRaw();
+		if ( isset( $raw->devices ) && 1 === \count( $raw->devices ) && isset( $raw->devices[0] ) ) {
+			if ( isset( $raw->devices[0]->redirect ) ) {
+				if ( $raw->devices[0]->redirect ) {
+					return $raw->devices[0]->redirect;
+				}
+			}
+		}
+		return null;
+	}
 
 	/**
 	 * Fill lazy loaded $profiles.

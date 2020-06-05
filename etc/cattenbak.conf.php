@@ -10,19 +10,6 @@ function getOldGetEduroamProfile( $display, $name ) {
 			"oauth" => true,
 		];
 }
-function getLetsWifiProfile( $display, $name, $hostname, $realm = null ) {
-	$suffix = $realm ? "?realm=$realm" : '';
-	return [
-			"id" => $name . '_' . strtr( $hostname, '.', '_' ),
-			"name" => $display,
-			"default" => true,
-			"eapconfig_endpoint" => "https://${hostname}/api/eap-config/${suffix}",
-			"token_endpoint" => "https://${hostname}/oauth/token/${suffix}",
-			"authorization_endpoint" => "https://${hostname}/oauth/authorize/${suffix}",
-			"oauth" => true,
-		];
-}
-
 
 return [
 	'versions' => [1/*, 2*/],
@@ -44,15 +31,8 @@ return [
 				'cat_id' => NULL,
 				'profiles' => [getOldGetEduroamProfile('geteduroam provided by Uninett', 'nordu')],
 			],
-			[
-				'name' => 'fyrkat',
-				'country' => 'NO',
-				'cat_id' => NULL,
-				'profiles' => [getLetsWifiProfile('geteduroam provided by Uninett', 'fyrkat', 'geteduroam.no', 'letswifi.fyrkat.no')],
-			],
 		],
 	'getEduroamProfiles' => [
-			9 => [getLetsWifiProfile('Personal device', 'uninett', 'geteduroam.no', 'demo.eduroam.no')],
 			1643 => [getOldGetEduroamProfile('geteduroam provided by Uninett', 'sunet')],
 		],
 	'hiddenProfiles' => [

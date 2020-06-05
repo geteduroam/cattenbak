@@ -27,7 +27,7 @@ class V1Generator extends Generator
 				$instances[] = $this->getIdPData( $idp ) + ['profiles' => $profiles];
 			}
 		}
-		\usort($instances, [$this, 'idpSorter']);
+		\usort( $instances, [$this, 'idpSorter'] );
 
 		return [
 			'version' => 1,
@@ -54,7 +54,7 @@ class V1Generator extends Generator
 		return $idps;
 	}
 
-	protected static function getProfileData( Profile $profile ): array
+	protected static function getCatProfileData( Profile $profile ): array
 	{
 		return [
 			'id' => 'cat_' . $profile->getProfileID(),
@@ -63,6 +63,40 @@ class V1Generator extends Generator
 			'eapconfig_endpoint' => $profile->getDevice( 'eap-config' )->getDownloadLink(),
 			'oauth' => false,
 		];
+	}
+	protected static function getLetsWifiProfileData( Profile $profile ): array
+	{
+		if ( $url = $profile->getRedirectUrl() ) {
+			$data = parse_url( $url );
+			if ( false
+				|| !array_key_exists( 'scheme', $data )
+				|| $data['scheme'] !== 'https'
+				|| !array_key_exists( 'host', $data )
+				|| array_key_exists( 'port', $data )
+				|| array_key_exists( 'user', $data )
+				|| array_key_exists( 'password', $data )
+				|| ( array_key_exists( 'path', $data ) && $data['path'] !== '/' )
+				|| !array_key_exists( 'fragment', $data )
+				|| $data['fragment'] !== 'letswifi'
+			) {
+					return [];
+			}
+			$host = $data['host'];
+			$query = array_key_exists( 'query', $data )
+				? '?' . $data['query']
+				: ''
+				;
+			return [
+				'id' => 'letswifi_' . strtr( $data['host'], '.', '_' ),
+				'name' => $profile->getDisplay(),
+				'default' => true,
+				'eapconfig_endpoint' => "https://$host/api/eap-config/$query",
+				'token_endpoint' => "https://$host/oauth/token/$query",
+				'authorization_endpoint' => "https://$host/oauth/authorize/$query",
+				'oauth' => true
+			];
+		}
+		return [];
 	}
 
 	protected static function getIdPData( IdentityProvider $idp): array
@@ -83,10 +117,17 @@ class V1Generator extends Generator
 			: []
 			;
 		foreach ( $idp->getProfiles() as $profile ) {
-			if ( \in_array( $profile->getProfileID(), $this->getApp()->getHiddenProfiles(), true ) || $profile->isSilverBullet() || $profile->isRedirect() ) {
+			if ( \in_array( $profile->getProfileID(), $this->getApp()->getHiddenProfiles(), true ) || $profile->isSilverBullet() ) {
 				continue;
 			}
-			$profiles[] = $this->getProfileData( $profile );
+			if ( $profile->isRedirect() ) {
+				$profileData = $this->getLetsWifiProfileData( $profile );
+				if ( $profileData ) {
+					$profiles[] = $profileData;
+				}
+			} else {
+				$profiles[] = $this->getCatProfileData( $profile );
+			}
 		}
 
 		return $profiles;
