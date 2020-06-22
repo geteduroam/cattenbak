@@ -79,15 +79,21 @@ class V1Generator extends Generator
 				|| !array_key_exists( 'fragment', $data )
 				|| $data['fragment'] !== 'letswifi'
 			) {
-					return [];
+				return [
+					'id' => 'cat_' . $profile->getProfileID(),
+					'redirect' => $url,
+					'name' => $profile->getDisplay(),
+				];
 			}
 			$host = $data['host'];
 			$query = array_key_exists( 'query', $data )
 				? '?' . $data['query']
 				: ''
 				;
+			$get = [];
+			parse_str( $data['query'] ?? '', $get );
 			return [
-				'id' => 'letswifi_' . strtr( $data['host'], '.', '_' ),
+				'id' => 'letswifi_' . strtr( $get['realm'] ?? $data['host'], '.', '_' ) . '_cat_' . $profile->getProfileID(),
 				'name' => $profile->getDisplay(),
 				'default' => true,
 				'eapconfig_endpoint' => "https://$host/api/eap-config/$query",

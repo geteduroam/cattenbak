@@ -53,7 +53,4 @@ lib/git.sr.ht/eduroam/php-cat-client/src:
 	git submodule init
 	git submodule update
 
-etc/cattenbak.conf.php:
-	cp etc/cattenbak.conf.dist.php etc/cattenbak.conf.php
-
 .PHONY: camera-ready codestyle psalm phan phpunit phpcs clean syntax test
