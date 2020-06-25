@@ -263,10 +263,6 @@ class Device
 	 * obtained.  This feature may be used by an identity provider that has custom
 	 * profiles or those that want to push extra settings through their profiles.
 	 *
-	 * If this device is available through CAT, this function will return a falsey
-	 * value.  Use #getDownloadLink() to always get a link you can send your user
-	 * to.
-	 *
 	 * @return string Redirect URL
 	 */
 	public function getRedirect(): string
@@ -372,10 +368,6 @@ class Device
 	 */
 	public function getDownloadLink(): string
 	{
-		if ( $this->isRedirect() ) {
-			return $this->getRaw()->redirect;
-		}
-
 		return $this->cat->getDownloadInstallerURL( $this->deviceID, $this->profileID );
 	}
 

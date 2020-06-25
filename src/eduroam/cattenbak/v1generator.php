@@ -105,7 +105,7 @@ class V1Generator extends Generator
 		return [];
 	}
 
-	protected static function getIdPData( IdentityProvider $idp): array
+	protected static function getIdPData( IdentityProvider $idp ): array
 	{
 		return [
 			'name' => $idp->getTitle(),
