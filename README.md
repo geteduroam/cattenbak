@@ -7,7 +7,6 @@ A scraper for cat.eduroam.org that generates discovery files for geteduroam
 1. Generate the files
 
 		make
-		make disco/v2 # if you're feeling fancy, it's not used yet
 
 2. Upload the `disco` folder to a web server
 
