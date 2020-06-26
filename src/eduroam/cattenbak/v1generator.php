@@ -64,20 +64,21 @@ class V1Generator extends Generator
 			'oauth' => false,
 		];
 	}
+
 	protected static function getLetsWifiProfileData( Profile $profile ): array
 	{
 		if ( $url = $profile->getRedirectUrl() ) {
 			$data = parse_url( $url );
 			if ( false
-				|| !array_key_exists( 'scheme', $data )
-				|| $data['scheme'] !== 'https'
-				|| !array_key_exists( 'host', $data )
-				|| array_key_exists( 'port', $data )
-				|| array_key_exists( 'user', $data )
-				|| array_key_exists( 'password', $data )
-				|| ( array_key_exists( 'path', $data ) && $data['path'] !== '/' )
-				|| !array_key_exists( 'fragment', $data )
-				|| $data['fragment'] !== 'letswifi'
+				|| !\array_key_exists( 'scheme', $data )
+				|| 'https' !== $data['scheme']
+				|| !\array_key_exists( 'host', $data )
+				|| \array_key_exists( 'port', $data )
+				|| \array_key_exists( 'user', $data )
+				|| \array_key_exists( 'password', $data )
+				|| ( \array_key_exists( 'path', $data ) && '/' !== $data['path'] )
+				|| !\array_key_exists( 'fragment', $data )
+				|| 'letswifi' !== $data['fragment']
 			) {
 				return [
 					'id' => 'cat_' . $profile->getProfileID(),
@@ -86,22 +87,24 @@ class V1Generator extends Generator
 				];
 			}
 			$host = $data['host'];
-			$query = array_key_exists( 'query', $data )
+			$query = \array_key_exists( 'query', $data )
 				? '?' . $data['query']
 				: ''
 				;
 			$get = [];
-			parse_str( $data['query'] ?? '', $get );
+			\parse_str( $data['query'] ?? '', $get );
+
 			return [
-				'id' => 'letswifi_' . strtr( $get['realm'] ?? $data['host'], '.', '_' ) . '_cat_' . $profile->getProfileID(),
+				'id' => 'letswifi_' . \strtr( $get['realm'] ?? $data['host'], '.', '_' ) . '_cat_' . $profile->getProfileID(),
 				'name' => $profile->getDisplay(),
 				'default' => true,
-				'eapconfig_endpoint' => "https://$host/api/eap-config/$query",
-				'token_endpoint' => "https://$host/oauth/token/$query",
-				'authorization_endpoint' => "https://$host/oauth/authorize/$query",
-				'oauth' => true
+				'eapconfig_endpoint' => "https://${host}/api/eap-config/${query}",
+				'token_endpoint' => "https://${host}/oauth/token/${query}",
+				'authorization_endpoint' => "https://${host}/oauth/authorize/${query}",
+				'oauth' => true,
 			];
 		}
+
 		return [];
 	}
 
