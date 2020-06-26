@@ -10,6 +10,7 @@
 
 namespace eduroam\Cattenbak;
 
+use DomainException;
 use eduroam\CAT\IdentityProvider;
 use eduroam\CAT\Profile;
 
@@ -68,7 +69,11 @@ class V1Generator extends Generator
 	protected static function getLetsWifiProfileData( Profile $profile ): array
 	{
 		if ( $url = $profile->getRedirectUrl() ) {
-			$data = parse_url( $url );
+			$data = \parse_url( $url );
+			if ( false === $data ) {
+				// TODO This could be a warning..?
+				throw new DomainException( "Illegal redirect URL ${url} for profile {$profile->getProfileID()}" );
+			}
 			if ( false
 				|| !\array_key_exists( 'scheme', $data )
 				|| 'https' !== $data['scheme']
