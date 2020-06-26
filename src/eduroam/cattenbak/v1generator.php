@@ -55,13 +55,35 @@ class V1Generator extends Generator
 		return $idps;
 	}
 
-	protected static function getCatProfileData( Profile $profile ): array
+	protected function getCatProfileData( Profile $profile ): array
 	{
+		$device = $profile->getDevice( 'eap-config' );
+		if ( $device->isRedirect() ) {
+			// The eap-config device is set to be a redirect
+			// We can't reliably determine which URL the user should be redirected to;
+			// maybe some device profiles are actually available
+			// So we override the redirect URL to be the CAT download page
+			$base = $this->getApp()->getCAT()->getBase();
+			if ( !\preg_match( '_(([^/]*/){3})_', $base, $match ) ) {
+				throw new DomainException( 'CAT base is not a valid URL' );
+			}
+			$base = $match[0];
+
+			return [
+				'id' => 'cat_' . $profile->getProfileID(),
+				'redirect' => $base . '?' . \http_build_query( [
+					'idp' => $profile->getIdentityProvider()->getEntityID(),
+					'profile' => $profile->getProfileID(),
+				] ),
+				'name' => $profile->getDisplay(),
+			];
+		}
+
 		return [
 			'id' => 'cat_' . $profile->getProfileID(),
 			'cat_profile' => $profile->getProfileID(),
 			'name' => $profile->getDisplay(),
-			'eapconfig_endpoint' => $profile->getDevice( 'eap-config' )->getDownloadLink(),
+			'eapconfig_endpoint' => $device->getDownloadLink(),
 			'oauth' => false,
 		];
 	}
