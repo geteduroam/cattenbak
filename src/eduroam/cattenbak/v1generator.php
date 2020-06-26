@@ -112,7 +112,7 @@ class V1Generator extends Generator
 				|| \array_key_exists( 'password', $data )
 				|| ( \array_key_exists( 'path', $data ) && '/' !== $data['path'] )
 				|| !\array_key_exists( 'fragment', $data )
-				|| 'letswifi' !== $data['fragment']
+				|| !in_array( 'letswifi', \explode( '#', $data['fragment'] ), true )
 			) {
 				return [
 					'id' => 'cat_' . $profile->getProfileID(),
