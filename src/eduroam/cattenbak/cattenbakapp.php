@@ -87,6 +87,10 @@ class CattenbakApp
 		}
 		$this->handle = $handle;
 		$seq = \fread( $this->handle, 100 );
+		if ( false === $seq ) {
+			throw new RuntimeException( 'Unable to read serial.txt' );
+		}
+		$seq = \trim( $seq );
 		if ( !\is_numeric( $seq ) || (int)$seq <= 0 ) {
 			throw new RuntimeException( 'serial.txt contains a negative or invalid number, must be positive' );
 		}
