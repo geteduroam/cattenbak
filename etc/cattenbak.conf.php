@@ -26,6 +26,7 @@ return [
 		],
 	'extraIdps' => [
 			[
+				'id' => 'extra_nordunet',
 				'name' => 'NORDUnet',
 				'country' => 'DK',
 				'cat_id' => NULL,
@@ -37,8 +38,6 @@ return [
 		],
 	'hiddenProfiles' => [
 			//10, // 9 Uninett - Uninett
-			2223, // 9 Uninett - Test usage (ad.eduroam.no)
-			4306, // 9 Uninett - geteduroam
 			1052, // 627 CNRS - CERMAV - 500 Internal Server Error
 			3830, // 2180 South African eduroam Test IdP - 500 Internal Server Error
 		],
