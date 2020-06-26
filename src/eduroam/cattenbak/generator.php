@@ -41,7 +41,7 @@ abstract class Generator
 		}
 		$this->writeFiles( $dir );
 		// Bump serial.txt one version up
-		\file_put_contents( \dirname( __DIR__, 3 ) . \DIRECTORY_SEPARATOR . 'serial.txt', ( $this->getApp()->getSeq() + 1 ) . "\n" );
+		$this->getApp()->incrSeq();
 	}
 
 	abstract public function generate(): array;

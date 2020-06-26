@@ -11,6 +11,7 @@
 namespace eduroam\Cattenbak;
 
 use eduroam\CAT\CAT;
+use RuntimeException;
 
 class CattenbakApp
 {
@@ -19,6 +20,12 @@ class CattenbakApp
 
 	/** @var ?CAT */
 	private $cat = null;
+
+	/** @var ?int */
+	private $seq;
+
+	/** @var ?resource */
+	private $handle;
 
 	/**
 	 * Instantiate app
@@ -67,7 +74,34 @@ class CattenbakApp
 	 */
 	public function getSeq(): int
 	{
-		return $this->getInt( 'seq' );
+		if ( null !== $this->seq ) {
+			return $this->seq;
+		}
+		$file = \dirname( __DIR__, 3 ) . \DIRECTORY_SEPARATOR . 'serial.txt';
+		$handle = \fopen( $file, 'c+' );
+		if ( false === $handle ) {
+			throw new RuntimeException( 'Unable to open serial.txt' );
+		}
+		if ( !\flock( $handle, \LOCK_EX ) ) {
+			throw new RuntimeException( 'Unable to lock serial.txt' );
+		}
+		$this->handle = $handle;
+		$seq = \fread( $this->handle, 100 );
+		if ( !\is_numeric( $seq ) || (int)$seq <= 0 ) {
+			throw new RuntimeException( 'serial.txt contains a negative or invalid number, must be positive' );
+		}
+		$this->seq = (int)$seq + 1;
+
+		return $this->seq;
+	}
+
+	public function incrSeq(): void
+	{
+		$seq = $this->getSeq();
+		\assert( null !== $this->handle, 'handle is null after calling getSeq' );
+		\rewind( $this->handle );
+		\fwrite( $this->handle, $seq . "\n" );
+		\flock( $this->handle, \LOCK_UN );
 	}
 
 	/**

@@ -13,7 +13,6 @@ function getOldGetEduroamProfile( $display, $name ) {
 
 return [
 	'versions' => [1/*, 2*/],
-	'seq' => intval(file_get_contents(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'serial.txt')) - 1,
 	'countries' => ['AL', 'AM', 'AR', 'AT', 'AU', 'BE', 'BG', 'BR', 'CA', 'CH', 'CL', 'CO', 'CR', 'CZ', 'DE', 'DK', 'EC', 'EE', 'ES', 'FI', 'FR', 'GE', 'GEANT', 'GR', 'HR', 'HU', 'IE', 'IL', 'IS', 'IT', 'JP', 'KR', 'LK', 'LT', 'LU', 'LV', 'MA', 'ME', 'MK', 'MT', 'MW', 'MX', 'MY', 'NG', 'NL', 'NO', 'NZ', 'OM', 'PE', 'PH', 'PK', 'PL', 'PT', 'RS', 'RU', 'SE', 'SG', 'SI', 'SK', 'TR', 'UA', 'UG', 'UK', 'US', 'UY', 'ZA'],
 	'languages' => ['en', 'nb', 'es', 'de' /*, 'nl' */],
 	'keywords' => [
