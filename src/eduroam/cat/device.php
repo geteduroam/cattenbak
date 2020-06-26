@@ -244,7 +244,10 @@ class Device
 	/**
 	 * Get the status of this device.
 	 *
-	 * It's not clear what this means, but 0 appears to mean success.
+	 * It's not clear what this means,
+	 * 0 appears to mean success (observed in many profiles)
+	 * 1 appears to be unavailble (observed in idp=627&profile=1052 and idp=2180&profile=3830)
+	 * -1 has not been observed, we use it as default value
 	 *
 	 * @return int status
 	 */

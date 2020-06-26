@@ -11,8 +11,11 @@
 namespace eduroam\Cattenbak;
 
 use DomainException;
+
 use eduroam\CAT\IdentityProvider;
 use eduroam\CAT\Profile;
+
+use Exception;
 
 class V1Generator extends Generator
 {
@@ -57,8 +60,12 @@ class V1Generator extends Generator
 
 	protected function getCatProfileData( Profile $profile ): array
 	{
-		$device = $profile->getDevice( 'eap-config' );
-		if ( $device->isRedirect() ) {
+		$device = null;
+		try {
+			$device = $profile->getDevice( 'eap-config' );
+		} catch ( Exception $_ ) {
+		}
+		if ( null === $device || $device->isRedirect() ) {
 			// The eap-config device is set to be a redirect
 			// We can't reliably determine which URL the user should be redirected to;
 			// maybe some device profiles are actually available
