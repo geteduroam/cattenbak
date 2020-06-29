@@ -86,11 +86,18 @@ class V1Generator extends Generator
 			];
 		}
 
+		$link = $device->getDownloadLink();
+		$catnip = $this->getApp()->getCatnip();
+		if ( null !== $catnip ) {
+			$cat = $this->getApp()->getCAT();
+			$link = \str_replace( $cat->getBase(), $catnip, $link );
+		}
+
 		return [
 			'id' => 'cat_' . $profile->getProfileID(),
 			'cat_profile' => $profile->getProfileID(),
 			'name' => $profile->getDisplay(),
-			'eapconfig_endpoint' => $device->getDownloadLink(),
+			'eapconfig_endpoint' => $link,
 			'oauth' => false,
 		];
 	}
@@ -112,7 +119,7 @@ class V1Generator extends Generator
 				|| \array_key_exists( 'password', $data )
 				|| ( \array_key_exists( 'path', $data ) && '/' !== $data['path'] )
 				|| !\array_key_exists( 'fragment', $data )
-				|| !in_array( 'letswifi', \explode( '#', $data['fragment'] ), true )
+				|| !\in_array( 'letswifi', \explode( '#', $data['fragment'] ), true )
 			) {
 				return [
 					'id' => 'cat_' . $profile->getProfileID(),

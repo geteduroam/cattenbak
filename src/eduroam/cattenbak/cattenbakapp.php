@@ -129,7 +129,7 @@ class CattenbakApp
 	 */
 	public function getCountries(): array
 	{
-		return  $this->getArray( 'countries' );
+		return $this->getArray( 'countries' );
 	}
 
 	/**
@@ -146,6 +146,16 @@ class CattenbakApp
 	public function getGetExtraIdps(): array
 	{
 		return $this->getOptionalArray( 'extraIdps' ) ?? [];
+	}
+
+	/**
+	 * @return ?string URL to catnip, null if no catnip is needed for this cat
+	 *
+	 * @see https://github.com/geteduroam/catnip
+	 */
+	public function getCatnip(): ?string
+	{
+		return $this->getOptionalString( 'catnip' );
 	}
 
 	protected function getOptionalInt( string $key ): ?int
@@ -182,6 +192,19 @@ class CattenbakApp
 			return $result;
 		}
 		throw new \DomainException( "Configuration setting ${key} must be array if set" );
+	}
+
+	protected function getOptionalString( string $key ): ?string
+	{
+		if ( !\array_key_exists( $key, $this->config ) ) {
+			return null;
+		}
+		// Phan doesn't trust $this->config not to change on the next three lines
+		$result = $this->config[$key];
+		if ( \is_string( $result ) ) {
+			return $result;
+		}
+		throw new \DomainException( "Configuration setting ${key} must be string if set" );
 	}
 
 	protected function getArray( string $key ): array
