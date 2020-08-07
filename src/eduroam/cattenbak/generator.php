@@ -40,13 +40,42 @@ abstract class Generator
 			}
 		}
 		$this->writeFiles( $dir );
-		// Bump serial.txt one version up
-		$this->getApp()->incrSeq();
+
+		$seq = $this->getApp()->getSeq();
+		if ( $this->diff( $dir, $seq - 1, $seq ) ) {
+			\printf( "Increased serial to %d\n", $seq );
+			// Bump serial.txt one version up
+			$this->getApp()->incrSeq();
+		} else {
+			\printf( "Kept serial on %d\n", $seq - 1 );
+		}
 	}
 
 	abstract public function generate(): array;
 
 	abstract public function getVersion(): int;
+
+	abstract public function diff( string $dir, int $oldSeq, int $newSeq ): bool;
+
+	protected function arrayDiff( array $array1, array $array2 ): bool
+	{
+		if ( \array_diff( $array1, $array2 ) || \count( $array2 ) !== \count( $array1 ) ) {
+			return true;
+		}
+		foreach ( $array1 as $key => $value ) {
+			if ( \is_array( $value ) && !\is_array( $array2[$key] ) ) {
+				return true;
+			}
+			if ( \is_array( $value ) && $this->arrayDiff( $value, $array2[$key] ) ) {
+				return true;
+			}
+			if ( $value !== $array2[$key] ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 
 	abstract protected function writeFiles( string $dir ): void;
 
@@ -80,5 +109,15 @@ abstract class Generator
 		if ( !\file_put_contents( $file, $contents ) ) {
 			throw new \RuntimeException( "Unable to write file ${file}" );
 		}
+	}
+
+	protected function readFile( string $file ): string
+	{
+		$result = \file_get_contents( $file );
+		if ( false === $result ) {
+			throw new \RuntimeException( "Unable to read file ${file}" );
+		}
+
+		return $result;
 	}
 }

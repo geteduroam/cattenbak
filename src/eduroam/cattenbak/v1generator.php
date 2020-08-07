@@ -45,6 +45,18 @@ class V1Generator extends Generator
 		return 1;
 	}
 
+	public function diff( string $dir, int $oldSeq, int $newSeq ): bool
+	{
+		$oldData = \json_decode( $this->readFile( "${dir}/discovery-${oldSeq}.json" ), true );
+		$newData = \json_decode( $this->readFile( "${dir}/discovery-${newSeq}.json" ), true );
+		if ( !\is_array( $oldData ) || !\is_array( $newData ) ) {
+			return true;
+		}
+		unset( $oldData['seq'] , $newData['seq'] );
+
+		return $this->arrayDiff( $oldData, $newData );
+	}
+
 	protected function getIdpsForCountries( ?array $countries = null ): array
 	{
 		if ( null === $countries) {
