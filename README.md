@@ -20,11 +20,20 @@ You may also add a Content Security Policy
 
 	Content-Security-Policy: default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none';
 
+
+## Upload to Amazon S3
+
+The generated file can be uploaded to S3 using
+
+	make aws
+
+
 ## Contributing
 
 After making changes, please run
 
 	make camera-ready
+
 
 ## License
 

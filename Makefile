@@ -1,6 +1,9 @@
 disco/v1: src/eduroam/cat etc/cattenbak.conf.php
 	php -d memory_limit=1023M bin/generate.php
 
+aws: disco/v1
+	aws --profile surf s3 cp disco/v1/discovery-$$(cat serial.txt).json.gz s3://eduroam-discovery/discovery/v1/discovery.json --cache-control "public, max-age=60, stale-while-revalidate=3570" --content-encoding gzip
+
 camera-ready: src/eduroam/cat syntax codestyle phpunit psalm phan
 
 clean:
@@ -50,4 +53,4 @@ lib/git.sr.ht/eduroam/php-cat-client/src:
 	git submodule init
 	git submodule update
 
-.PHONY: camera-ready codestyle psalm phan phpunit phpcs clean syntax test
+.PHONY: aws camera-ready codestyle psalm phan phpunit phpcs clean syntax test
