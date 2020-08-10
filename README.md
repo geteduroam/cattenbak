@@ -25,7 +25,7 @@ You may also add a Content Security Policy
 
 The generated file can be uploaded to S3 using
 
-	make aws
+	make -B prod
 
 
 ## Contributing
