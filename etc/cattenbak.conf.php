@@ -4,9 +4,9 @@ function getOldGetEduroamProfile( $display, $name ) {
 			"id" => "${name}_geteduroam_no",
 			"name" => $display,
 			"default" => true,
-			"eapconfig_endpoint" => "https://geteduroam.no/generate.php",
-			"token_endpoint" => "https://geteduroam.no/token.php",
-			"authorization_endpoint" => "https://geteduroam.no/authorize.php",
+			"eapconfig_endpoint" => "https://demo.eduroam.no/generate.php",
+			"token_endpoint" => "https://demo.eduroam.no/token.php",
+			"authorization_endpoint" => "https://demo.eduroam.no/authorize.php",
 			"oauth" => true,
 		];
 }
