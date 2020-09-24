@@ -1,0 +1,10 @@
+# systemd timer for cattenbak
+[Unit]
+Description=Run cattenbak hourly
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+
+[Install]
+WantedBy=timers.target

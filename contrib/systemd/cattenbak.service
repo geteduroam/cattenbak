@@ -1,0 +1,10 @@
+# systemd service for cattenbak, to be started by cattenbak.timer
+[Unit]
+Description=Generate discovery for geteduroam
+
+[Service]
+# We should use oneshot, but the process runs too long
+Type=single
+ExecStart=/usr/bin/make -C /opt/geteduroam/cattenbak prod
+User=geteduroam
+Group=geteduroam
