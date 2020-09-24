@@ -4,7 +4,7 @@ Description=Generate discovery for geteduroam
 
 [Service]
 # We should use oneshot, but the process runs too long
-Type=single
+Type=simple
 ExecStart=/usr/bin/make -BC /opt/geteduroam/cattenbak prod
 User=geteduroam
 Group=geteduroam
