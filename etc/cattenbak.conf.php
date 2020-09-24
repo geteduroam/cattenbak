@@ -37,10 +37,11 @@ return [
 			1643 => [getOldGetEduroamProfile('geteduroam provided by Uninett', 'sunet')],
 		],
 	'hiddenProfiles' => [
-			//10, // 9 Uninett - Uninett
+			//10, // 9 Uninett - Uninett, test
+			7734, // 9 Unnamed Entity - Al-Maktoum College of Higher Education, 500 Internal Server Error from CAT
 		],
 	'hiddenInstitutes' => [
-			//9, Uninett
+			//9, Uninett, test
 		],
 	'cacheTime' => 604800,
 ];
