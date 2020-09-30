@@ -59,17 +59,17 @@ abstract class Generator
 
 	protected function arrayDiff( array $array1, array $array2 ): bool
 	{
-		if ( \array_diff( $array1, $array2 ) || \count( $array2 ) !== \count( $array1 ) ) {
+		if ( 0 !== \count( \array_diff( $array1, $array2 ) ) || \count( $array2 ) !== \count( $array1 ) ) {
 			return true;
 		}
 		foreach ( $array1 as $key => $value ) {
-			if ( \is_array( $value ) && !\is_array( $array2[$key] ) ) {
+			if ( $value === $array2[$key] ) {
+				continue;
+			}
+			if ( !\is_array( $value ) || !\is_array( $array2[$key] ) ) {
 				return true;
 			}
-			if ( \is_array( $value ) && $this->arrayDiff( $value, $array2[$key] ) ) {
-				return true;
-			}
-			if ( $value !== $array2[$key] ) {
+			if ( $this->arrayDiff( $value, $array2[$key] ) ) {
 				return true;
 			}
 		}
