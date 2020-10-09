@@ -14,6 +14,13 @@
 	'extraIdps' => [
 		],
 	'getEduroamProfiles' => [
+			6635 => [
+				[
+					"id" => 'error_geteduroam_no',
+					"name" => 'I Am Error',
+					"eapconfig_endpoint" => 'http://myip.tf/',
+				],
+			],
 		],
 	'hiddenProfiles' => [
 			//10, // 9 Uninett - Uninett, test
