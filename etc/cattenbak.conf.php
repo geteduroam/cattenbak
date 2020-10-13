@@ -16,17 +16,22 @@
 	'getEduroamProfiles' => [
 			6635 => [
 				[
-					'id': 'emergya_geteduroam_no_cat_2618',
-					'name': 'eduroam Visitor Access (eVA)',
-					'eapconfig_endpoint': 'https://y1wtfr5sqa.execute-api.eu-central-1.amazonaws.com/catnip?action=downloadInstaller&device=eap-config&profile=2618',
-					'token_endpoint': 'https://emergya.geteduroam.no/oauth/token/',
-					'authorization_endpoint': 'https://emergya.geteduroam.no/oauth/authorize/',
-					'oauth': true,
+					'id' => 'emergya_geteduroam_no_cat_2618',
+					'name' => 'eduroam Visitor Access (eVA)',
+					'eapconfig_endpoint' => 'https://y1wtfr5sqa.execute-api.eu-central-1.amazonaws.com/catnip?action=downloadInstaller&device=eap-config&profile=2618',
+					'token_endpoint' => 'https://emergya.geteduroam.no/oauth/token/',
+					'authorization_endpoint' => 'https://emergya.geteduroam.no/oauth/authorize/',
+					'oauth' => true,
 				],
 				[
 					'id' => 'pade_tmp',
 					'name' => 'Pade',
 					'eapconfig_endpoint' => 'https://pade.nl/hostedidp-geteduroam.eap-config',
+				],
+				[
+					"id" => 'error_geteduroam_no',
+					"name" => 'I Am Error',
+					"eapconfig_endpoint" => 'https://geteduroam.app/',
 				],
 			],
 		],
