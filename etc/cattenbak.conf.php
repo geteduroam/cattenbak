@@ -18,7 +18,7 @@
 				[
 					'id' => 'emergya_geteduroam_no_cat_2618',
 					'name' => 'eduroam Visitor Access (eVA)',
-					'eapconfig_endpoint' => 'https://y1wtfr5sqa.execute-api.eu-central-1.amazonaws.com/catnip?action=downloadInstaller&device=eap-config&profile=2618',
+					'eapconfig_endpoint' => 'https://pade.nl/eva.eap-config',
 					'token_endpoint' => 'https://emergya.geteduroam.no/oauth/token/',
 					'authorization_endpoint' => 'https://emergya.geteduroam.no/oauth/authorize/',
 					'oauth' => true,
