@@ -1,4 +1,5 @@
 disco/v1: src/eduroam/cat etc/cattenbak.conf.php
+	mkdir -p disco/v1
 	php -d memory_limit=1023M bin/generate.php
 
 prod: disco/v1
@@ -10,7 +11,8 @@ prod: disco/v1
 camera-ready: src/eduroam/cat syntax codestyle phpunit psalm phan
 
 clean:
-	rm -rf disco src/eduroam/cat composer.phar php-cs-fixer-v2.phar psalm.phar phpunit-7.phar vendor
+	rm -rf disco composer.phar php-cs-fixer-v2.phar psalm.phar phpunit-7.phar vendor
+	find $$(php -r 'echo sys_get_temp_dir();') -name eduroam-\* -delete
 
 test: syntax phpunit
 
