@@ -5,7 +5,7 @@ disco/v1: src/eduroam/cat etc/cattenbak.conf.php
 prod: disco/v1
 	git pull --autostash --rebase
 	git commit -m"Bump serial.txt to $$(cat serial.txt)" serial.txt || true
-	aws --profile geteduroam s3 cp disco/v1/discovery-$$(cat serial.txt).json.gz s3://eduroam-discovery/discovery/v1/discovery.json --cache-control "public, max-age=3600, stale-while-revalidate=86400, stale-if-error=2592000" --content-encoding gzip
+	aws --profile geteduroam s3 cp disco/v1/discovery-$$(cat serial.txt).json.gz s3://eduroam-discovery/discovery/v1/discovery.json --cache-control "public, max-age=3600, s-maxage=300, stale-while-revalidate=86400, stale-if-error=2592000" --content-encoding gzip
 	git push
 
 camera-ready: src/eduroam/cat syntax codestyle phpunit psalm phan
