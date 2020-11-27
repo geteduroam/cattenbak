@@ -150,7 +150,7 @@ class V1Generator extends Generator
 			return [
 				'id' => 'letswifi_' . \strtr( $get['realm'] ?? $data['host'], '.', '_' ) . '_cat_' . $profile->getProfileID(),
 				'name' => $profile->getDisplay(),
-				'default' => ($letswifiCount == 1) ? true : false,
+				'default' => 1 === $letswifiCount,
 				'eapconfig_endpoint' => "https://${host}/api/eap-config/${query}",
 				'token_endpoint' => "https://${host}/oauth/token/${query}",
 				'authorization_endpoint' => "https://${host}/oauth/authorize/${query}",
@@ -173,7 +173,7 @@ class V1Generator extends Generator
 
 	protected function fetchProfileDataForIdP( IdentityProvider $idp ): array
 	{
-		$letswifiCount=0;
+		$letswifiCount = 0;
 		$geProfiles = $this->getApp()->getGetEduroamProfiles();
 		$profiles = \array_key_exists( $idp->getEntityID(), $geProfiles )
 			? $geProfiles[$idp->getEntityID()]
@@ -184,7 +184,7 @@ class V1Generator extends Generator
 				continue;
 			}
 			if ( $profile->isRedirect() ) {
-				$letswifiCount++;
+				++$letswifiCount;
 				$profileData = $this->getLetsWifiProfileData( $profile, $letswifiCount );
 				if ( $profileData ) {
 					$profiles[] = $profileData;
