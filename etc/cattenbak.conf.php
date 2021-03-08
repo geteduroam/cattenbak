@@ -42,5 +42,5 @@
 	'hiddenInstitutes' => [
 			//9, Uninett, test
 		],
-	'cacheTime' => 604800,
+	'cacheTime' => 1800,
 ];
