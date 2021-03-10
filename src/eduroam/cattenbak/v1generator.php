@@ -22,7 +22,7 @@ class V1Generator extends Generator
 	public function generate(): array
 	{
 		$instances = $this->getApp()->getGetExtraIdps();
-		foreach ( $this->getIdpsForCountries() as $idp ) {
+		foreach ( $this->getIdpsForCountries( $this->getApp()->getCountries() ) as $idp ) {
 			if ( \in_array( $idp->getEntityID(), $this->getApp()->getHiddenInstitutions(), true ) ) {
 				continue;
 			}
@@ -64,8 +64,12 @@ class V1Generator extends Generator
 
 	protected function getIdpsForCountries( ?array $countries = null ): array
 	{
-		if ( null === $countries) {
-			$countries = $this->getApp()->getCountries();
+		if ( empty( $countries ) ) {
+			$countries = \array_map(
+					static function ($c) {
+						return $c->federation;
+					}, $this->getApp()->getCAT()->listCountries()
+				);
 		}
 		$idps = [];
 		foreach ( $countries as $country ) {
