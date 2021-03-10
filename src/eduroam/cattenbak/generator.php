@@ -113,7 +113,7 @@ abstract class Generator
 
 	protected function readFile( string $file ): string
 	{
-		$result = \file_get_contents( $file );
+		$result = @\file_get_contents( $file );
 		if ( false === $result ) {
 			throw new \RuntimeException( "Unable to read file ${file}" );
 		}
