@@ -47,7 +47,12 @@ class V1Generator extends Generator
 
 	public function diff( string $dir, int $oldSeq, int $newSeq ): bool
 	{
-		$oldData = \json_decode( $this->readFile( "${dir}/discovery-${oldSeq}.json" ), true );
+		try {
+			$oldPayload = $this->readFile( "${dir}/discovery-${oldSeq}.json" );
+		} catch ( \RuntimeException $_ ) {
+			$oldPayload = '{}';
+		}
+		$oldData = \json_decode( $oldPayload, true );
 		$newData = \json_decode( $this->readFile( "${dir}/discovery-${newSeq}.json" ), true );
 		if ( !\is_array( $oldData ) || !\is_array( $newData ) ) {
 			return true;
