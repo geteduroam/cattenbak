@@ -23,28 +23,12 @@ class Device
 		'w7' => ['/Windows NT 6[._]1/'],
 		'w8' => ['/Windows NT 6[._][23]/'],
 		'w10' => ['/Windows NT 10[._]/', '/Windows NT 1[1-9]/', '/Windows NT [2-9][0-9]/'],
-		'mobileconfig-56' => ['/\((iPad|iPhone|iPod);.*OS [56]_/'],
-		'mobileconfig' => ['/\((iPad|iPhone|iPod);.*OS [7-9]/', '/\((iPad|iPhone|iPod);.*OS 1[0-1]/'],
-		'mobileconfig12' => ['/\((iPad|iPhone|iPod);.*OS 1[2-9]/', '/\((iPad|iPhone|iPod);.*OS [2-9][0-9]/'],
-		'apple_lion' => ['/Mac OS X 10[._]7/'],
-		'apple_m_lion' => ['/Mac OS X 10[._]8/'],
-		'apple_mav' => ['/Mac OS X 10[._]9/'],
-		'apple_yos' => ['/Mac OS X 10[._]10/'],
-		'apple_el_cap' => ['/Mac OS X 10[._]11/'],
-		'apple_sierra' => ['/Mac OS X 10[._]12/'],
-		'apple_hi_sierra' => ['/Mac OS X 10[._]13/'],
-		'apple_mojave' => ['/Mac OS X 10[._]14/'],
-		'apple_catalina' => ['/Mac OS X 10[._]15/', '/Mac OS X 10[._]1[6-9]/', '/Mac OS X 10[._][2-9][0-9]/'],
+		'apple_global' => ['/\((iPad|iPhone|iPod);.*OS [0-9]_/', '/Mac OS X [0-9]*[._]/'],
 		'linux' => ['/Linux(?!.*Android)/'],
 		'chromeos' => ['/CrOS/'],
-		'android43' => ['/Android 4[._]3/'],
-		'android_kitkat' => ['/Android 4[._][4-9]/'],
-		'android_lollipop' => ['/Android 5[._][0-9]/'],
-		'android_marshmallow' => ['/Android 6[._][0-9]/'],
-		'android_nougat' => ['/Android 7[._][0-9]/'],
-		'android_oreo' => ['/Android 8[._][0-9]/'],
-		'android_pie' => ['/Android 9[._][0-9]/'],
-		'android_q' => ['/Android 10[._][0-9]/', '/Android 1[0-9]/', '/Android [2-9][0-9]/'],
+		'android_4_7' => ['/Android 4[._]3/', '/Android [4-7][._][4-9]/'],
+		'android_8_10' => ['/Android [8-9][._][0-9]/', '/Android 10[._][0-9]/'],
+		'android_recent' => ['/Android 11[._][0-9]/', '/Android 2[0-9]/', '/Android [2-9][0-9]/'],
 		0 => ['//'],
 	];
 
@@ -141,7 +125,7 @@ class Device
 	public static function groupDevices( array $devices ): array
 	{
 		// Make array with same keys as DEVICE_GROUPS, but all initial values are []
-		$result = \array_map( static function(){return []; }, static::DEVICE_GROUPS );
+		$result = \array_map( static function (){return []; }, static::DEVICE_GROUPS );
 		foreach ( $devices as $device ) {
 			if ( !$device->isRedirect() && 0 !== $device->getStatus() ) {
 				continue;
@@ -371,7 +355,8 @@ class Device
 	 */
 	public function getDownloadLink(): string
 	{
-		assert( !$this->isRedirect(), 'Impossible to get a download link for a redirect device' );
+		\assert( !$this->isRedirect(), 'Impossible to get a download link for a redirect device' );
+
 		return $this->cat->getDownloadInstallerURL( $this->deviceID, $this->profileID );
 	}
 

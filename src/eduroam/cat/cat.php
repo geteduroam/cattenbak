@@ -274,6 +274,32 @@ class CAT
 	}
 
 	/**
+	 * List languages supported in CAT
+	 *
+	 * @return array<array{lang:string,display:string,locale:string}>
+	 */
+	public function listLanguages(): array
+	{
+		return $this->catJSONQuery( [
+			'action' => 'listLanguages',
+		] )->data;
+	}
+
+	/**
+	 * List countries supported in CAT
+	 *
+	 * @param mixed $lang
+	 *
+	 * @return array<array{federation:string,display:string}>
+	 */
+	public function listCountries( $lang = '' ): array
+	{
+		return $this->catJSONQuery( [
+			'action' => 'listCountries',
+		], $lang )->data;
+	}
+
+	/**
 	 * Count how many requests have been issues, including requests that hit the cache
 	 *
 	 * @return int Amount of requests

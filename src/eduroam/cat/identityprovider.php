@@ -329,7 +329,7 @@ class IdentityProvider
 	{
 		$keywords = \preg_split( '/[\s,]+/', \strtolower( \trim( $search ) ) );
 
-		return \array_reduce( $keywords, function( bool $carry, string $item ): bool {
+		return \array_reduce( $keywords, function ( bool $carry, string $item ): bool {
 			return $carry && ( !$item || false !== \strpos( \strtolower( $this->getTitle() ), $item ) );
 		}, true );
 	}
