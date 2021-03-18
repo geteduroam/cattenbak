@@ -1,5 +1,5 @@
 <?php return [
-	'catnip' => 'https://y1wtfr5sqa.execute-api.eu-central-1.amazonaws.com/catnip',
+	//'catnip' => 'https://y1wtfr5sqa.execute-api.eu-central-1.amazonaws.com/catnip',
 	'versions' => [1/*, 2*/],
 	'countries' => [], /* list countries to query, or keep empty for all */
 	'languages' => ['en', 'nb', 'es', 'de' /*, 'nl' */],
