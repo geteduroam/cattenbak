@@ -48,7 +48,11 @@ def store_file(discovery, filename):
 
 def store_gzip_file(discovery, filename):
     with gzip.open(filename, "wb") as fh:
-        fh.write(json.dumps(discovery, separators=(",", ":"), allow_nan=False).encode("ascii"))
+        fh.write(
+            json.dumps(discovery, separators=(",", ":"), allow_nan=False).encode(
+                "ascii"
+            )
+        )
 
 
 def get_preferred_name(names, country):
@@ -67,7 +71,7 @@ def get_preferred_name(names, country):
 
 def get_profiles(idp):
     profiles = []
-    if True: # was if "profiles" in idp, but we want to crash if that happens
+    if True:  # was if "profiles" in idp, but we want to crash if that happens
         for profile in idp["profiles"]:
             profile_name = get_preferred_name(profile["names"], idp["country"])
             letswifi_url = ""
