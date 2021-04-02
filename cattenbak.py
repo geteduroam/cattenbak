@@ -8,11 +8,6 @@ import argparse
 
 cat_api = "https://cat.eduroam.org/new_test/user/API.php"
 cat_download_api = "https://cat.eduroam.org/user/API.php"
-discovery_url = "https://discovery.eduroam.app/v1/discovery.json"
-
-
-def get_old_discovery_from_url():
-    return requests.get(discovery_url).json()
 
 
 def get_old_discovery_from_file(filename):
@@ -20,17 +15,17 @@ def get_old_discovery_from_file(filename):
         with open(filename, "r") as fh:
             return json.load(fh)
     except json.decoder.JSONDecodeError:
-        return {"seq": 0, "instances": [], "error": "json"}
+        return {"serial": 0, "instances": [], "error": "json"}
     except FileNotFoundError:
-        return {"seq": 0, "instances": [], "error": "file"}
+        return {"serial": 0, "instances": [], "error": "file"}
 
 
 def discovery_needs_refresh(old_discovery, new_discovery):
-    return not old_discovery["instances"] == new_discovery["instances"]
-
-
-def get_updated():
-    return datetime.datetime.now().isoformat()
+    return (
+        old_discovery == None
+        or "instances" not in old_discovery
+        or not old_discovery["instances"] == new_discovery["instances"]
+    )
 
 
 def upload_s3(s3, discovery, s3_bucket, s3_file):
@@ -62,14 +57,14 @@ def download_s3(s3, s3_bucket, s3_file):
             Key=s3_file,
         )
     except s3.exceptions.NoSuchKey:
-       return {"seq": 0, "instances": [], "error": "NoSuchKey"}
+       return {"serial": 0, "instances": [], "error": "NoSuchKey"}
     except s3.exceptions.InvalidObjectState:
-       return {"seq": 0, "instances": [], "error": "InvalidObjectState"}
+       return {"serial": 0, "instances": [], "error": "InvalidObjectState"}
 
     try:
         return json.loads(gzip.decompress(response["Body"].read()).decode("utf-8"))
     except json.decoder.JSONDecodeError:
-        return {"seq": 0, "instances": [], "error": "json"}
+        return {"serial": 0, "instances": [], "error": "json"}
 
 
 def store_file(discovery, filename):
@@ -160,11 +155,20 @@ def get_profiles(idp):
     return profiles
 
 
-def generate(seq):
+def generate(old_serial=None):
+    candidate_serial = int(datetime.datetime.utcnow().strftime("%Y%m%d00"))
+    if old_serial == None:
+        # Use a high number so we have a better chance to be over
+        # Let's hope this doesn't happen more than once a day ;)
+        serial = candidate_serial + 80
+    elif candidate_serial <= old_serial:
+        serial = old_serial + 1
+    else:
+        serial = candidate_serial
+
     return {
         "version": 1,
-        "seq": seq,
-        "updated": get_updated(),
+        "serial": serial,
         "instances": instances(),
     }
 
@@ -252,18 +256,18 @@ if __name__ == "__main__":
         old_discovery = download_s3(s3, args["s3_bucket"], args["s3_path"])
     else:
         old_discovery = get_old_discovery_from_file(args["file_path"])
-    if not "seq" in old_discovery or old_discovery["seq"] == 0:
-        old_discovery = get_old_discovery_from_url()
+    if not "serial" in old_discovery:
+        old_discovery = {"serial":0}
 
-    discovery = generate(seq=old_discovery["seq"] + 1)
+    discovery = generate(old_serial=old_discovery["serial"])
     if args["force"] or discovery_needs_refresh(old_discovery, discovery):
         if args["store"]:
-            print("Storing discovery seq %s" % discovery["seq"])
+            print("Storing discovery serial %s" % discovery["serial"])
             store_file(discovery, args["file_path"])
             store_gzip_file(discovery, args["file_path"] + ".gz")
         if args["s3_bucket"]:
-            print("Uploading discovery seq %s" % discovery["seq"])
+            print("Uploading discovery serial %s" % discovery["serial"])
             upload_s3(s3, discovery, args["s3_bucket"], args["s3_path"])
 
     else:
-        print("Unchanged %d" % old_discovery["seq"])
+        print("Unchanged %d" % old_discovery["serial"])
