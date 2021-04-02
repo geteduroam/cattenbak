@@ -1,0 +1,11 @@
+[Unit]
+Description=Update discovery data via cattenbak
+
+[Timer]
+#OnCalendar=hourly
+#Persistent=true
+OnBootSec=15min
+OnUnitActiveSec=10m
+
+[Install]
+WantedBy=timers.target

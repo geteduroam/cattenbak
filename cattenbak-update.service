@@ -1,0 +1,8 @@
+[Unit]
+Description=Update discovery data via cattenbak
+
+[Service]
+Type=oneshot
+ExecStart=/opt/cattenbak/cattenbak.py
+User=cattenbak
+Group=cattenbak
