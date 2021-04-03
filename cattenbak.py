@@ -59,6 +59,7 @@ def upload_s3(discovery):
         CacheControl="public, max-age=900, s-maxage=300, stale-while-revalidate=86400, stale-if-error=2592000",
         ContentEncoding="gzip",
         ContentType="application/json",
+        ACL="public-read",
     )
 
 
