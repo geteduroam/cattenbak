@@ -9,7 +9,7 @@ cat_api = 'https://cat.eduroam.org/user/API.php'
 cat_download_api = "https://cat.eduroam.org/user/API.php"
 s3_bucket = "eduroam-discovery"
 s3_file = "discovery/v1/discovery.json"
-aws_session = "default"
+aws_session = None
 discovery_url = "https://discovery.eduroam.app/v1/discovery.json"
 
 
