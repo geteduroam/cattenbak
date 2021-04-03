@@ -13,15 +13,16 @@ aws_session = None
 discovery_url = "https://discovery.eduroam.app/v1/discovery.json"
 
 
-def get_seq():
-    old_discovery = requests.get(discovery_url)
-    return int(old_discovery.json()["seq"]) + 1
+def get_seq(old_discovery):
+    return int(old_discovery["seq"]) + 1
 
 
-def discovery_needs_refresh(discovery):
-    old_discovery = requests.get(discovery_url).json()["instances"]
-    new_discovery = discovery["instances"]
-    if not old_discovery == new_discovery:
+def get_old_discovery():
+    return requests.get(discovery_url).json()
+
+
+def discovery_needs_refresh(old_discovery, new_discovery):
+    if not old_discovery["instances"] == new_discovery["instances"]:
         return True
     return False
 
@@ -126,7 +127,8 @@ def get_profiles(idp):
 
 
 if __name__ == "__main__":
-    seq = get_seq()
+    old_discovery = get_old_discovery()
+    seq = get_seq(old_discovery)
     discovery = {
         "version": 1,
         "seq": seq,
@@ -169,5 +171,5 @@ if __name__ == "__main__":
     # upload_s3(discovery)
     # store_file(discovery, 'discovery.json')
     store_gzip_file(discovery, "discovery-%d.json" % (seq))
-    if discovery_needs_refresh(discovery):
+    if discovery_needs_refresh(old_discovery, discovery):
         upload_s3(discovery)
