@@ -43,7 +43,9 @@ def get_updated():
 
 def upload_s3(discovery):
     discovery_body = gzip.compress(
-        json.dumps(discovery, separators=(",", ":"), allow_nan=False).encode("ascii")
+        json.dumps(
+            discovery, separators=(",", ":"), allow_nan=False, ensure_ascii=True
+        ).encode("ascii")
     )
     if aws_session:
         session = boto3.Session(profile_name=aws_session)
@@ -62,15 +64,17 @@ def upload_s3(discovery):
 
 def store_file(discovery, filename):
     with open(filename, "w") as fh:
-        json.dump(discovery, fh)
+        json.dump(
+            discovery, fh, separators=(",", ":"), allow_nan=False, ensure_ascii=True
+        )
 
 
 def store_gzip_file(discovery, filename):
     with gzip.open(filename, "wb") as fh:
         fh.write(
-            json.dumps(discovery, separators=(",", ":"), allow_nan=False).encode(
-                "ascii"
-            )
+            json.dumps(
+                discovery, separators=(",", ":"), allow_nan=False, ensure_ascii=True
+            ).encode("ascii")
         )
 
 
@@ -90,7 +94,7 @@ def get_preferred_name(names, country):
 
 def get_profiles(idp):
     profiles = []
-    if True:  # was if "profiles" in idp, but we want to crash if that happens
+    if "profiles" in idp:
         for profile in idp["profiles"]:
             profile_name = get_preferred_name(profile["names"], idp["country"])
             letswifi_url = ""
