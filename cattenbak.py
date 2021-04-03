@@ -18,6 +18,14 @@ def get_seq():
     return int(old_discovery.json()["seq"]) + 1
 
 
+def discovery_needs_refresh(discovery):
+    old_discovery = requests.get(discovery_url).json()["instances"]
+    new_discovery = discovery["instances"]
+    if not old_discovery == new_discovery:
+        return True
+    return False
+
+
 def get_updated():
     return datetime.datetime.now().isoformat()
 
@@ -161,3 +169,5 @@ if __name__ == "__main__":
     # upload_s3(discovery)
     # store_file(discovery, 'discovery.json')
     store_gzip_file(discovery, "discovery-%d.json" % (seq))
+    if discovery_needs_refresh(discovery):
+        upload_s3(discovery)
