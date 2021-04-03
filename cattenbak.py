@@ -137,7 +137,7 @@ def get_profiles(idp):
                         "oauth": False,
                     }
                 )
-    return profiles
+    return sorted(profiles, key=lambda profile: profile["name"])
 
 
 if __name__ == "__main__":
@@ -181,6 +181,8 @@ if __name__ == "__main__":
                     "profiles": profiles,
                 }
             )
+
+    discovery["instances"] = sorted(discovery["instances"], key=lambda idp: idp["name"])
 
     # print(json.dumps(discovery))
     # upload_s3(discovery)
