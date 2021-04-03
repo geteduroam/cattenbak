@@ -21,6 +21,16 @@ def get_old_discovery():
     return requests.get(discovery_url).json()
 
 
+def get_old_discovery_from_file(filename):
+    try:
+        with open(filename, "r") as fh:
+            return json.load(fh)
+    except json.decoder.JSONDecodeError:
+        return {"seq": 0, "instances": []}
+    except FileNotFoundError:
+        return {"seq": 0, "instances": []}
+
+
 def discovery_needs_refresh(old_discovery, new_discovery):
     if not old_discovery["instances"] == new_discovery["instances"]:
         return True
@@ -127,7 +137,8 @@ def get_profiles(idp):
 
 
 if __name__ == "__main__":
-    old_discovery = get_old_discovery()
+    # old_discovery = get_old_discovery()
+    old_discovery = get_old_discovery_from_file("discovery.json")
     seq = get_seq(old_discovery)
     discovery = {
         "version": 1,
@@ -169,7 +180,7 @@ if __name__ == "__main__":
 
     # print(json.dumps(discovery))
     # upload_s3(discovery)
-    # store_file(discovery, 'discovery.json')
-    store_gzip_file(discovery, "discovery-%d.json" % (seq))
     if discovery_needs_refresh(old_discovery, discovery):
+        store_file(discovery, "discovery.json")
+        # store_gzip_file(discovery, "discovery-%d.json" % (seq))
         upload_s3(discovery)
