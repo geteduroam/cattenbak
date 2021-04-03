@@ -19,5 +19,5 @@
 4. Install the timer
 	* Modify `cattenbak-update.service` so the path is correct
 
-		systemctl link `pwd`/cattenbak-update.service
-		systemctl enable `pwd`/cattenbak-update.timer
+			systemctl link `pwd`/cattenbak-update.service
+			systemctl enable `pwd`/cattenbak-update.timer
