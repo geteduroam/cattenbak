@@ -22,7 +22,7 @@ Make sure that the files are served with the following headers:
 
 	Access-Control-Allow-Origin: *
 	Access-Control-Allow-Methods: GET, HEAD
-	Cache-Control: public, max-age=3600, stale-while-revalidate=86400, stale-if-error=2592000
+	Cache-Control: public, max-age=900, s-maxage=300, stale-while-revalidate=86400, stale-if-error=2592000
 	X-Content-Type-Options: nosniff
 
 You may also add a Content Security Policy

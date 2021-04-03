@@ -56,7 +56,7 @@ def upload_s3(discovery):
         Bucket=s3_bucket,
         Key=s3_file,
         Body=discovery_body,
-        CacheControl="public, max-age=3600, s-maxage=300, stale-while-revalidate=86400, stale-if-error=2592000",
+        CacheControl="public, max-age=900, s-maxage=300, stale-while-revalidate=86400, stale-if-error=2592000",
         ContentEncoding="gzip",
         ContentType="application/json",
     )
