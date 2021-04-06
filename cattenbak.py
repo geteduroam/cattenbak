@@ -140,7 +140,7 @@ def get_profiles(idp):
                         "oauth": False,
                     }
                 )
-    return sorted(profiles, key=lambda profile: profile["name"])
+    return profiles
 
 
 if __name__ == "__main__":
