@@ -144,8 +144,8 @@ def get_profiles(idp):
 
 
 if __name__ == "__main__":
-    # old_discovery = get_old_discovery()
-    old_discovery = get_old_discovery_from_file("discovery.json")
+    old_discovery = get_old_discovery()
+    # old_discovery = get_old_discovery_from_file("discovery.json")
     seq = get_seq(old_discovery)
     discovery = {
         "version": 1,
