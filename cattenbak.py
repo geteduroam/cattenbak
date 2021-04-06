@@ -190,6 +190,6 @@ if __name__ == "__main__":
     # print(json.dumps(discovery))
     # upload_s3(discovery)
     if discovery_needs_refresh(old_discovery, discovery):
-        store_file(discovery, "discovery.json")
-        # store_gzip_file(discovery, "discovery-%d.json" % (seq))
-        upload_s3(discovery)
+        # store_file(discovery, "discovery-%d.json" % (seq))
+        store_gzip_file(discovery, "/var/www/v1/discovery.json")
+        # upload_s3(discovery)
