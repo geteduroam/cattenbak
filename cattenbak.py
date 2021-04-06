@@ -96,6 +96,7 @@ def get_preferred_name(names, country):
 def get_profiles(idp):
     profiles = []
     if "profiles" in idp:
+        profile_default = True
         for profile in idp["profiles"]:
             profile_name = get_preferred_name(profile["names"], idp["country"])
             letswifi_url = ""
@@ -111,13 +112,14 @@ def get_profiles(idp):
                     {
                         "id": "letswifi_cat_%s" % (profile["id"]),
                         "name": profile_name,
-                        "default": True,
+                        "default": profile_default,
                         "eapconfig_endpoint": letswifi_url + "api/eap-config/",
                         "token_endpoint": letswifi_url + "oauth/token/",
                         "authorization_endpoint": letswifi_url + "oauth/authorize/",
                         "oauth": True,
                     }
                 )
+                profile_default = False
             elif redirect_url:
                 profiles.append(
                     {
