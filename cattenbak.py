@@ -108,6 +108,8 @@ def get_profiles(idp):
                     redirect_url = profile["redirect"]
             if letswifi_url:
                 # todo: visit .well-known/letswifi.json for actual endpoints
+                if letswifi_url[-1] != "/":
+                    letswifi_url += "/"
                 profiles.append(
                     {
                         "id": "letswifi_cat_%s" % (profile["id"]),
