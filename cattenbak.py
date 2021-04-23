@@ -149,16 +149,20 @@ def get_profiles(idp):
     return profiles
 
 
-if __name__ == "__main__":
+def generate():
     old_discovery = get_old_discovery()
     # old_discovery = get_old_discovery_from_file("discovery.json")
     seq = get_seq(old_discovery)
-    discovery = {
+    return {
         "version": 1,
         "seq": seq,
         "updated": get_updated(),
-        "instances": [],
+        "instances": instances(),
     }
+
+
+def instances():
+    instances = []
 
     r_list_everything = requests.get(
         cat_api + "?action=listIdentityProvidersWithProfiles"
@@ -181,7 +185,7 @@ if __name__ == "__main__":
         profiles = get_profiles(data[idp])
 
         if profiles:
-            discovery["instances"].append(
+            instances.append(
                 {
                     "name": idp_name,
                     "country": data[idp]["country"],
@@ -191,10 +195,11 @@ if __name__ == "__main__":
                 }
             )
 
-    discovery["instances"] = sorted(discovery["instances"], key=lambda idp: idp["name"])
+    return sorted(instances, key=lambda idp: idp["name"])
 
-    # print(json.dumps(discovery))
-    # upload_s3(discovery)
+
+if __name__ == "__main__":
+    discovery = generate()
     if discovery_needs_refresh(old_discovery, discovery):
         # store_file(discovery, "discovery-%d.json" % (seq))
         store_gzip_file(discovery, "/var/www/v1/discovery.json")
