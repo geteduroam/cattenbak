@@ -137,7 +137,7 @@ def get_profiles(idp):
                         "cat_profile": int(profile["id"]),
                         "name": profile_name,
                         "eapconfig_endpoint": cat_download_api
-                        + "?action=downloadInstaller&device=eap-config&profile=%s"
+                        + "?action=downloadInstaller&device=eap-generic&profile=%s"
                         % (profile["id"]),
                         "oauth": False,
                     }
