@@ -15,5 +15,5 @@ run: cattenbak/cattenbak.py
 .PHONY: run
 
 clean:
-	rm -rf cattenbak
+	rm -rf cattenbak cattenbak.zip discovery*.json discovery*.json.gz
 .PHONY: clean
