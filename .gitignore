@@ -1,2 +1,4 @@
 /cattenbak
-discovery-*.json
+/cattenbak.zip
+discovery*.json
+discovery*.json.gz
