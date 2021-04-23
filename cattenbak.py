@@ -80,6 +80,8 @@ def store_gzip_file(discovery, filename):
 
 
 def get_preferred_name(names, country):
+    if len(names) == 0:
+        return None
     lang = {}
     for name in names:
         lang[name["lang"]] = name["value"]
@@ -90,7 +92,7 @@ def get_preferred_name(names, country):
     elif "en" in lang:
         return lang["en"]
     else:
-        return data[idp]["names"][0]["value"]
+        return names[0]["value"]
 
 
 def get_profiles(idp):
@@ -99,6 +101,8 @@ def get_profiles(idp):
         profile_default = True
         for profile in idp["profiles"]:
             profile_name = get_preferred_name(profile["names"], idp["country"])
+            if profile_name == None:
+                profile_name = get_preferred_name(idp["names"], idp["country"])
             letswifi_url = ""
             redirect_url = ""
             if profile["redirect"]:
