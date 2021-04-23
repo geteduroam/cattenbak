@@ -4,12 +4,10 @@ import json
 import gzip
 import datetime
 import boto3
+import argparse
 
 cat_api = "https://cat.eduroam.org/new_test/user/API.php"
 cat_download_api = "https://cat.eduroam.org/user/API.php"
-s3_bucket = "eduroam-discovery"
-s3_file = "discovery/v1/discovery.json"
-aws_session = None
 discovery_url = "https://discovery.eduroam.app/v1/discovery.json"
 
 
@@ -41,17 +39,12 @@ def get_updated():
     return datetime.datetime.now().isoformat()
 
 
-def upload_s3(discovery):
+def upload_s3(s3, discovery, s3_bucket, s3_file):
     discovery_body = gzip.compress(
         json.dumps(
             discovery, separators=(",", ":"), allow_nan=False, ensure_ascii=True
         ).encode("ascii")
     )
-    if aws_session:
-        session = boto3.Session(profile_name=aws_session)
-    else:
-        session = boto3.Session()
-    s3 = session.client("s3")
     s3.put_object(
         Bucket=s3_bucket,
         Key=s3_file,
@@ -198,9 +191,43 @@ def instances():
     return sorted(instances, key=lambda idp: idp["name"])
 
 
+def geofilter(discovery):
+    for instance in discovery['instances']:
+        del instance['geo']
+        del instance['country']
+    return discovery
+
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Generate geteduroam discovery files')
+    parser.add_argument('--aws-session', nargs='?', metavar='SESSION', help='AWS session from ~/.aws to use')
+    parser.add_argument('--s3-bucket', nargs='?', metavar='BUCKET', help='S3 bucket to upload to')
+    parser.add_argument('--s3-file-plain-v1', nargs='?', metavar='PATH', dest='s3_plain_v1', default='v1/discovery.json', help='path for plain V1 discovery file')
+    parser.add_argument('--s3-file-geo-v1', nargs='?', metavar='PATH', dest='s3_geo_v1', default='v1/discovery-geo.json', help='path for geolocation V1 discovery file')
+    parser.add_argument('--discovery-plain', nargs='?', metavar='FILE', default='discovery.json', help='name of plain discovery file to write')
+    parser.add_argument('--discovery-geo', nargs='?', metavar='FILE', default='discovery-geo.json', help='name of geolocation discovery file to write')
+    parser.add_argument('-n', dest='store', action='store_false')
+    parser.add_argument('-f', '--force', action='store_true', help='S3 bucket to upload to')
+    args = vars(parser.parse_args())
+
+    if (args['s3_bucket']):
+        if args['aws_session']:
+            session = boto3.Session(profile_name=args['aws_session'])
+        else:
+            session = boto3.Session()
+        s3 = session.client("s3")
+
     discovery = generate()
     if discovery_needs_refresh(old_discovery, discovery):
-        # store_file(discovery, "discovery-%d.json" % (seq))
-        store_gzip_file(discovery, "/var/www/v1/discovery.json")
-        # upload_s3(discovery)
+        if (args['store']):
+            store_file(discovery, args['discovery_geo'])
+            store_gzip_file(discovery, args['discovery_geo'] + '.gz')
+        if (args['s3_bucket']):
+            upload_s3(s3, discovery, args['s3_bucket'], args['s3_geo_v1'])
+
+        geofilter(discovery)
+        if (args['store']):
+            store_file(discovery, args['discovery_plain'])
+            store_gzip_file(discovery, args['discovery_plain'] + '.gz')
+        if (args['s3_bucket']):
+            upload_s3(s3, discovery, args['s3_bucket'], args['s3_plain_v1'])
