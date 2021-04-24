@@ -48,8 +48,10 @@ def upload_s3(s3, discovery, s3_bucket, s3_file):
         ContentType="application/json",
         ACL="public-read",
     )
-    if result['ResponseMetadata']['HTTPStatusCode'] != 200:
-        raise Exception('Wrong status code ' + result['ResponseMetadata']['HTTPStatusCode'])
+    if result["ResponseMetadata"]["HTTPStatusCode"] != 200:
+        raise Exception(
+            "Wrong status code " + result["ResponseMetadata"]["HTTPStatusCode"]
+        )
 
 
 def download_s3(s3, s3_bucket, s3_file):
@@ -58,12 +60,12 @@ def download_s3(s3, s3_bucket, s3_file):
         Key=s3_file,
     )
     try:
-        return json.loads(gzip.decompress(response['Body'].read()).decode('utf-8'))
+        return json.loads(gzip.decompress(response["Body"].read()).decode("utf-8"))
     except json.decoder.JSONDecodeError:
         return {"seq": 0, "instances": [], "error": "json"}
-    #except S3.Client.exceptions.NoSuchKey:
+    # except S3.Client.exceptions.NoSuchKey:
     #    return {"seq": 0, "instances": [], "error": "NoSuchKey"}
-    #except S3.Client.exceptions.InvalidObjectState:
+    # except S3.Client.exceptions.InvalidObjectState:
     #    return {"seq": 0, "instances": [], "error": "InvalidObjectState"}
 
 
@@ -200,51 +202,86 @@ def instances():
 
 
 def geofilter(discovery):
-    for instance in discovery['instances']:
-        del instance['geo']
-        del instance['country']
+    for instance in discovery["instances"]:
+        del instance["geo"]
+        del instance["country"]
     return discovery
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Generate geteduroam discovery files')
-    parser.add_argument('--aws-session', nargs='?', metavar='SESSION', help='AWS session from ~/.aws to use')
-    parser.add_argument('--s3-bucket', nargs='?', metavar='BUCKET', help='S3 bucket to upload to')
-    parser.add_argument('--s3-file-plain-v1', nargs='?', metavar='PATH', dest='s3_plain_v1', default='v1/discovery.json', help='path for plain V1 discovery file')
-    parser.add_argument('--s3-file-geo-v1', nargs='?', metavar='PATH', dest='s3_geo_v1', default='v1/discovery-geo.json', help='path for geolocation V1 discovery file')
-    parser.add_argument('--discovery-plain', nargs='?', metavar='FILE', default='discovery.json', help='name of plain discovery file to write')
-    parser.add_argument('--discovery-geo', nargs='?', metavar='FILE', default='discovery-geo.json', help='name of geolocation discovery file to write')
-    parser.add_argument('-n', dest='store', action='store_false')
-    parser.add_argument('-f', '--force', action='store_true', help='S3 bucket to upload to')
+    parser = argparse.ArgumentParser(description="Generate geteduroam discovery files")
+    parser.add_argument(
+        "--aws-session",
+        nargs="?",
+        metavar="SESSION",
+        help="AWS session from ~/.aws to use",
+    )
+    parser.add_argument(
+        "--s3-bucket", nargs="?", metavar="BUCKET", help="S3 bucket to upload to"
+    )
+    parser.add_argument(
+        "--s3-file-plain-v1",
+        nargs="?",
+        metavar="PATH",
+        dest="s3_plain_v1",
+        default="v1/discovery.json",
+        help="path for plain V1 discovery file",
+    )
+    parser.add_argument(
+        "--s3-file-geo-v1",
+        nargs="?",
+        metavar="PATH",
+        dest="s3_geo_v1",
+        default="v1/discovery-geo.json",
+        help="path for geolocation V1 discovery file",
+    )
+    parser.add_argument(
+        "--discovery-plain",
+        nargs="?",
+        metavar="FILE",
+        default="discovery.json",
+        help="name of plain discovery file to write",
+    )
+    parser.add_argument(
+        "--discovery-geo",
+        nargs="?",
+        metavar="FILE",
+        default="discovery-geo.json",
+        help="name of geolocation discovery file to write",
+    )
+    parser.add_argument("-n", dest="store", action="store_false")
+    parser.add_argument(
+        "-f", "--force", action="store_true", help="S3 bucket to upload to"
+    )
     args = vars(parser.parse_args())
 
-    if (args['s3_bucket']):
-        if args['aws_session']:
-            session = boto3.Session(profile_name=args['aws_session'])
+    if args["s3_bucket"]:
+        if args["aws_session"]:
+            session = boto3.Session(profile_name=args["aws_session"])
         else:
             session = boto3.Session()
         s3 = session.client("s3")
-        old_discovery = download_s3(s3, args['s3_bucket'], args['s3_geo_v1'])
+        old_discovery = download_s3(s3, args["s3_bucket"], args["s3_geo_v1"])
     else:
-        old_discovery = get_old_discovery_from_file(args['discovery_geo'])
-        if not 'seq' in old_discovery or old_discovery['seq'] == 0:
+        old_discovery = get_old_discovery_from_file(args["discovery_geo"])
+        if not "seq" in old_discovery or old_discovery["seq"] == 0:
             old_discovery = get_old_discovery_from_url()
 
-    discovery = generate(seq=old_discovery['seq'] + 1)
+    discovery = generate(seq=old_discovery["seq"] + 1)
     if discovery_needs_refresh(old_discovery, discovery):
-        if (args['store']):
-            print("Storing discovery seq %s" % discovery['seq'])
-            store_file(discovery, args['discovery_geo'])
-            store_gzip_file(discovery, args['discovery_geo'] + '.gz')
-        if (args['s3_bucket']):
-            print("Uploading discovery seq %s" % discovery['seq'])
-            upload_s3(s3, discovery, args['s3_bucket'], args['s3_geo_v1'])
+        if args["store"]:
+            print("Storing discovery seq %s" % discovery["seq"])
+            store_file(discovery, args["discovery_geo"])
+            store_gzip_file(discovery, args["discovery_geo"] + ".gz")
+        if args["s3_bucket"]:
+            print("Uploading discovery seq %s" % discovery["seq"])
+            upload_s3(s3, discovery, args["s3_bucket"], args["s3_geo_v1"])
 
         geofilter(discovery)
-        if (args['store']):
-            store_file(discovery, args['discovery_plain'])
-            store_gzip_file(discovery, args['discovery_plain'] + '.gz')
-        if (args['s3_bucket']):
-            upload_s3(s3, discovery, args['s3_bucket'], args['s3_plain_v1'])
+        if args["store"]:
+            store_file(discovery, args["discovery_plain"])
+            store_gzip_file(discovery, args["discovery_plain"] + ".gz")
+        if args["s3_bucket"]:
+            upload_s3(s3, discovery, args["s3_bucket"], args["s3_plain_v1"])
     else:
-        print("Unchanged %d" % old_discovery['seq'])
+        print("Unchanged %d" % old_discovery["seq"])
