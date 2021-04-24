@@ -208,7 +208,7 @@ def geofilter(discovery):
     return discovery
 
 
-if __name__ == "__main__":
+def parse_args():
     parser = argparse.ArgumentParser(description="Generate geteduroam discovery files")
     parser.add_argument(
         "--aws-session",
@@ -253,7 +253,11 @@ if __name__ == "__main__":
     parser.add_argument(
         "-f", "--force", action="store_true", help="S3 bucket to upload to"
     )
-    args = vars(parser.parse_args())
+    return vars(parser.parse_args())
+
+
+if __name__ == "__main__":
+    args = parse_args()
 
     if args["s3_bucket"]:
         if args["aws_session"]:
