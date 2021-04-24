@@ -10,14 +10,19 @@
 		git clone https://github.com/geteduroam/cattenbak.git
 		cd cattenbak
 
-	* The [../cattenbak.py] file contains some settings, `s3_bucket`, `s3_file` and `aws_session` that you can change if needed
 
 3. Do a test-run
 
 		make run
+		cattenbak/cattenbak.py --s3-bucket disco-geteduroam-app
 
-4. Install the timer
-	* Modify `cattenbak-update.service` so the path is correct
+
+4. Configure the timer
+	* Modify `cattenbak-update.service` so the path and arguments are correct
+
+			ExecStart=/opt/cattenbak/cattenbak.py --s3-bucket disco-geteduroam-app
+
+5. Enable the timer
 
 			systemctl link `pwd`/cattenbak-update.service
 			systemctl enable `pwd`/cattenbak-update.timer
