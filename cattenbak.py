@@ -11,11 +11,7 @@ cat_download_api = "https://cat.eduroam.org/user/API.php"
 discovery_url = "https://discovery.eduroam.app/v1/discovery.json"
 
 
-def get_seq(old_discovery):
-    return int(old_discovery["seq"]) + 1
-
-
-def get_old_discovery():
+def get_old_discovery_from_url():
     return requests.get(discovery_url).json()
 
 
@@ -24,15 +20,13 @@ def get_old_discovery_from_file(filename):
         with open(filename, "r") as fh:
             return json.load(fh)
     except json.decoder.JSONDecodeError:
-        return {"seq": 0, "instances": []}
+        return {"seq": 0, "instances": [], "error": "json"}
     except FileNotFoundError:
-        return {"seq": 0, "instances": []}
+        return {"seq": 0, "instances": [], "error": "file"}
 
 
 def discovery_needs_refresh(old_discovery, new_discovery):
-    if not old_discovery["instances"] == new_discovery["instances"]:
-        return True
-    return False
+    return not old_discovery["instances"] == new_discovery["instances"]
 
 
 def get_updated():
@@ -45,7 +39,7 @@ def upload_s3(s3, discovery, s3_bucket, s3_file):
             discovery, separators=(",", ":"), allow_nan=False, ensure_ascii=True
         ).encode("ascii")
     )
-    s3.put_object(
+    result = s3.put_object(
         Bucket=s3_bucket,
         Key=s3_file,
         Body=discovery_body,
@@ -54,6 +48,23 @@ def upload_s3(s3, discovery, s3_bucket, s3_file):
         ContentType="application/json",
         ACL="public-read",
     )
+    if result['ResponseMetadata']['HTTPStatusCode'] != 200:
+        raise Exception('Wrong status code ' + result['ResponseMetadata']['HTTPStatusCode'])
+
+
+def download_s3(s3, s3_bucket, s3_file):
+    response = s3.get_object(
+        Bucket=s3_bucket,
+        Key=s3_file,
+    )
+    try:
+        return json.loads(gzip.decompress(response['Body'].read()).decode('utf-8'))
+    except json.decoder.JSONDecodeError:
+        return {"seq": 0, "instances": [], "error": "json"}
+    #except S3.Client.exceptions.NoSuchKey:
+    #    return {"seq": 0, "instances": [], "error": "NoSuchKey"}
+    #except S3.Client.exceptions.InvalidObjectState:
+    #    return {"seq": 0, "instances": [], "error": "InvalidObjectState"}
 
 
 def store_file(discovery, filename):
@@ -142,10 +153,7 @@ def get_profiles(idp):
     return profiles
 
 
-def generate():
-    old_discovery = get_old_discovery()
-    # old_discovery = get_old_discovery_from_file("discovery.json")
-    seq = get_seq(old_discovery)
+def generate(seq):
     return {
         "version": 1,
         "seq": seq,
@@ -216,13 +224,20 @@ if __name__ == "__main__":
         else:
             session = boto3.Session()
         s3 = session.client("s3")
+        old_discovery = download_s3(s3, args['s3_bucket'], args['s3_geo_v1'])
+    else:
+        old_discovery = get_old_discovery_from_file(args['discovery_geo'])
+        if not 'seq' in old_discovery or old_discovery['seq'] == 0:
+            old_discovery = get_old_discovery_from_url()
 
-    discovery = generate()
+    discovery = generate(seq=old_discovery['seq'] + 1)
     if discovery_needs_refresh(old_discovery, discovery):
         if (args['store']):
+            print("Storing discovery seq %s" % discovery['seq'])
             store_file(discovery, args['discovery_geo'])
             store_gzip_file(discovery, args['discovery_geo'] + '.gz')
         if (args['s3_bucket']):
+            print("Uploading discovery seq %s" % discovery['seq'])
             upload_s3(s3, discovery, args['s3_bucket'], args['s3_geo_v1'])
 
         geofilter(discovery)
@@ -231,3 +246,5 @@ if __name__ == "__main__":
             store_gzip_file(discovery, args['discovery_plain'] + '.gz')
         if (args['s3_bucket']):
             upload_s3(s3, discovery, args['s3_bucket'], args['s3_plain_v1'])
+    else:
+        print("Unchanged %d" % old_discovery['seq'])
