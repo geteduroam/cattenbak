@@ -8,7 +8,7 @@ import argparse
 
 cat_api = "https://cat.eduroam.org/new_test/user/API.php"
 cat_download_api = "https://cat.eduroam.org/user/API.php"
-discovery_url = "https://discovery.eduroam.app/v1/discovery.json"
+discovery_url = "https://discovery.eduroam.app/v1/discovery-geo.json"
 
 
 def get_old_discovery_from_url():
@@ -264,11 +264,11 @@ if __name__ == "__main__":
         old_discovery = download_s3(s3, args["s3_bucket"], args["s3_geo_v1"])
     else:
         old_discovery = get_old_discovery_from_file(args["discovery_geo"])
-        if not "seq" in old_discovery or old_discovery["seq"] == 0:
-            old_discovery = get_old_discovery_from_url()
+    if not "seq" in old_discovery or old_discovery["seq"] == 0:
+        old_discovery = get_old_discovery_from_url()
 
     discovery = generate(seq=old_discovery["seq"] + 1)
-    if discovery_needs_refresh(old_discovery, discovery):
+    if args["force"] or discovery_needs_refresh(old_discovery, discovery):
         if args["store"]:
             print("Storing discovery seq %s" % discovery["seq"])
             store_file(discovery, args["discovery_geo"])

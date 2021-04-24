@@ -6,7 +6,7 @@
 
 2. Install dependencies and cattenbak
 
-		yum install git python3-pip
+		sudo yum install git python3-pip
 		git clone https://github.com/geteduroam/cattenbak.git
 		cd cattenbak
 
