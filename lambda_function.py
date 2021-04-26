@@ -25,7 +25,7 @@ def lambda_handler(event, context):
 	if old_discovery:
 		discovery["seq"] = max(discovery["seq"], old_discovery["seq"] + 1)
 	if discovery_needs_refresh(old_discovery, discovery):
-		print("Uploading discovery seq %s" % discovery.seq)
+		print("Uploading discovery seq %s" % discovery["seq"])
 		upload_s3(s3, discovery, os.environ["s3_bucket"], os.environ["s3_geo_v1"])
 		geofilter(discovery)
 		upload_s3(s3, discovery, os.environ["s3_bucket"], os.environ["s3_plain_v1"])
