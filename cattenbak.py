@@ -36,7 +36,7 @@ def get_updated():
 def upload_s3(s3, discovery, s3_bucket, s3_file):
     discovery_body = gzip.compress(
         json.dumps(
-            discovery, separators=(",", ":"), allow_nan=False, ensure_ascii=True
+            discovery, separators=(",", ":"), allow_nan=False, sort_keys=True, ensure_ascii=True
         ).encode("ascii")
         + b"\r\n"
     )
@@ -75,7 +75,7 @@ def download_s3(s3, s3_bucket, s3_file):
 def store_file(discovery, filename):
     with open(filename, "w") as fh:
         json.dump(
-            discovery, fh, separators=(",", ":"), allow_nan=False, ensure_ascii=True
+            discovery, fh, separators=(",", ":"), allow_nan=False, sort_keys=True, ensure_ascii=True
         )
         fh.write("\r\n")
 
@@ -84,7 +84,7 @@ def store_gzip_file(discovery, filename):
     with gzip.open(filename, "wb") as fh:
         fh.write(
             json.dumps(
-                discovery, separators=(",", ":"), allow_nan=False, ensure_ascii=True
+                discovery, separators=(",", ":"), allow_nan=False, sort_keys=True, ensure_ascii=True
             ).encode("ascii")
             + b"\r\n"
         )
