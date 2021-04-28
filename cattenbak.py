@@ -38,6 +38,7 @@ def upload_s3(s3, discovery, s3_bucket, s3_file):
         json.dumps(
             discovery, separators=(",", ":"), allow_nan=False, ensure_ascii=True
         ).encode("ascii")
+        + b"\r\n"
     )
     result = s3.put_object(
         Bucket=s3_bucket,
@@ -76,6 +77,7 @@ def store_file(discovery, filename):
         json.dump(
             discovery, fh, separators=(",", ":"), allow_nan=False, ensure_ascii=True
         )
+        fh.write("\r\n")
 
 
 def store_gzip_file(discovery, filename):
@@ -84,6 +86,7 @@ def store_gzip_file(discovery, filename):
             json.dumps(
                 discovery, separators=(",", ":"), allow_nan=False, ensure_ascii=True
             ).encode("ascii")
+            + b"\r\n"
         )
 
 
