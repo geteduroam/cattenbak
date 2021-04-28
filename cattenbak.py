@@ -172,6 +172,7 @@ def generate(old_serial=None):
 
     return {
         "version": 1,
+        "seq": -1,
         "serial": serial,
         "instances": instances(),
     }
