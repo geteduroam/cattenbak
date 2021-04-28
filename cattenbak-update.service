@@ -3,6 +3,6 @@ Description=Update discovery data via cattenbak
 
 [Service]
 Type=oneshot
-ExecStart=/opt/cattenbak/cattenbak.py --discovery-plain /var/www/v1/discovery.json --discovery-geo /var/www/v1/discovery-geo.json
+ExecStart=/opt/cattenbak/cattenbak.py --file-path /var/www/v1/discovery.json
 User=cattenbak
 Group=cattenbak
