@@ -36,10 +36,10 @@ server {
 
         add_header Strict-Transport-Security "max-age=31536000; includeSubdomains";
 
-        location /v1/discovery.json {
+        location /v1 {
+                gzip_static always;
                 add_header Access-Control-Allow-Origin '*';
                 add_header Cache-Control 'must-revalidate';
-                add_header Content-Encoding 'gzip';
                 add_header X-Content-Type-Options 'nosniff';
         }
 
