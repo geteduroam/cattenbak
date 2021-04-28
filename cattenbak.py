@@ -149,7 +149,6 @@ def get_profiles(idp):
                 profiles.append(
                     {
                         "id": "cat_%s" % (profile["id"]),
-                        "cat_profile": int(profile["id"]),
                         "name": profile_name,
                         "eapconfig_endpoint": cat_download_api
                         + "?action=downloadInstaller&device=eap-generic&profile=%s"
@@ -206,7 +205,6 @@ def instances():
                 {
                     "name": idp_name,
                     "country": data[idp]["country"],
-                    "cat_idp": int(data[idp]["entityID"]),
                     "geo": geo,
                     "profiles": profiles,
                 }
