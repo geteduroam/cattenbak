@@ -55,18 +55,20 @@ def upload_s3(s3, discovery, s3_bucket, s3_file):
 
 
 def download_s3(s3, s3_bucket, s3_file):
-    response = s3.get_object(
-        Bucket=s3_bucket,
-        Key=s3_file,
-    )
+    try:
+        response = s3.get_object(
+            Bucket=s3_bucket,
+            Key=s3_file,
+        )
+    except s3.exceptions.NoSuchKey:
+       return {"seq": 0, "instances": [], "error": "NoSuchKey"}
+    except s3.exceptions.InvalidObjectState:
+       return {"seq": 0, "instances": [], "error": "InvalidObjectState"}
+
     try:
         return json.loads(gzip.decompress(response["Body"].read()).decode("utf-8"))
     except json.decoder.JSONDecodeError:
         return {"seq": 0, "instances": [], "error": "json"}
-    # except S3.Client.exceptions.NoSuchKey:
-    #    return {"seq": 0, "instances": [], "error": "NoSuchKey"}
-    # except S3.Client.exceptions.InvalidObjectState:
-    #    return {"seq": 0, "instances": [], "error": "InvalidObjectState"}
 
 
 def store_file(discovery, filename):
