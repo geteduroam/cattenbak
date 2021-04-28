@@ -11,7 +11,7 @@ import os
 def lambda_handler(event, context):
 	s3 = boto3.client("s3")
 	old_discovery = download_s3(s3, os.environ["s3_bucket"], os.environ["s3_path"])
-	old_serial = old_discovery["serial"] if "serial" in old_discovery else 0
+	old_serial = old_discovery["serial"] if old_discovery else None
 
 	discovery = generate(old_serial=old_serial)
 
