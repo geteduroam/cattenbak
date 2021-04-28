@@ -18,5 +18,5 @@
 
 | Key         | Value                 |
 |-------------|-----------------------|
-| s3_bucket   | disco-geteduroam-app  |
+| s3_bucket   | geteduroam-disco      |
 | s3_path     | v1/discovery.json     |

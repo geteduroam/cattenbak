@@ -14,13 +14,13 @@
 3. Do a test-run
 
 		make run
-		cattenbak/cattenbak.py --s3-bucket disco-geteduroam-app
+		cattenbak/cattenbak.py --s3-bucket geteduroam-disco
 
 
 4. Configure the timer
 	* Modify `cattenbak-update.service` so the path and arguments are correct
 
-			ExecStart=/opt/cattenbak/cattenbak.py --s3-bucket disco-geteduroam-app
+			ExecStart=/opt/cattenbak/cattenbak.py --s3-bucket geteduroam-disco
 
 5. Enable the timer
 
