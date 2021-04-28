@@ -14,10 +14,12 @@ def get_old_discovery_from_file(filename):
     try:
         with open(filename, "r") as fh:
             return json.load(fh)
-    except json.decoder.JSONDecodeError:
-        return {"serial": 0, "instances": [], "error": "json"}
-    except FileNotFoundError:
-        return {"serial": 0, "instances": [], "error": "file"}
+    except json.decoder.JSONDecodeError as e:
+        print(e)
+        return None
+    except FileNotFoundError as e:
+        print(e)
+        return None
 
 
 def discovery_needs_refresh(old_discovery, new_discovery):
@@ -56,15 +58,18 @@ def download_s3(s3, s3_bucket, s3_file):
             Bucket=s3_bucket,
             Key=s3_file,
         )
-    except s3.exceptions.NoSuchKey:
-       return {"serial": 0, "instances": [], "error": "NoSuchKey"}
+    except s3.exceptions.NoSuchKey as e:
+        print(e)
+        return None
     except s3.exceptions.InvalidObjectState:
-       return {"serial": 0, "instances": [], "error": "InvalidObjectState"}
+        print(e)
+        return None
 
     try:
         return json.loads(gzip.decompress(response["Body"].read()).decode("utf-8"))
-    except json.decoder.JSONDecodeError:
-        return {"serial": 0, "instances": [], "error": "json"}
+    except json.decoder.JSONDecodeError as e:
+        print(e)
+        return None
 
 
 def store_file(discovery, filename):
@@ -256,10 +261,10 @@ if __name__ == "__main__":
         old_discovery = download_s3(s3, args["s3_bucket"], args["s3_path"])
     else:
         old_discovery = get_old_discovery_from_file(args["file_path"])
-    if not "serial" in old_discovery:
-        old_discovery = {"serial":0}
+    if not old_discovery or not "serial" in old_discovery:
+        old_discovery = None
 
-    discovery = generate(old_serial=old_discovery["serial"])
+    discovery = generate(old_serial=old_discovery["serial"] if old_discovery else None)
     if args["force"] or discovery_needs_refresh(old_discovery, discovery):
         if args["store"]:
             print("Storing discovery serial %s" % discovery["serial"])
