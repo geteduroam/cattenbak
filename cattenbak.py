@@ -8,7 +8,7 @@ import argparse
 
 cat_api = "https://cat.eduroam.org/new_test/user/API.php"
 cat_download_api = "https://cat.eduroam.org/user/API.php"
-discovery_url = "https://discovery.eduroam.app/v1/discovery-geo.json"
+discovery_url = "https://discovery.eduroam.app/v1/discovery.json"
 
 
 def get_old_discovery_from_url():
@@ -206,13 +206,6 @@ def instances():
     return sorted(instances, key=lambda idp: idp["name"])
 
 
-def geofilter(discovery):
-    for instance in discovery["instances"]:
-        del instance["geo"]
-        del instance["country"]
-    return discovery
-
-
 def parse_args():
     parser = argparse.ArgumentParser(description="Generate geteduroam discovery files")
     parser.add_argument(
@@ -225,34 +218,20 @@ def parse_args():
         "--s3-bucket", nargs="?", metavar="BUCKET", help="S3 bucket to upload to"
     )
     parser.add_argument(
-        "--s3-file-plain-v1",
+        "--s3-path",
         nargs="?",
         metavar="PATH",
-        dest="s3_plain_v1",
+        dest="s3_path",
         default="v1/discovery.json",
-        help="path for plain V1 discovery file",
+        help="path where to write V1 discovery file in S3",
     )
     parser.add_argument(
-        "--s3-file-geo-v1",
-        nargs="?",
-        metavar="PATH",
-        dest="s3_geo_v1",
-        default="v1/discovery-geo.json",
-        help="path for geolocation V1 discovery file",
-    )
-    parser.add_argument(
-        "--discovery-plain",
+        "--file-path",
         nargs="?",
         metavar="FILE",
+        dest="file_path",
         default="discovery.json",
-        help="name of plain discovery file to write",
-    )
-    parser.add_argument(
-        "--discovery-geo",
-        nargs="?",
-        metavar="FILE",
-        default="discovery-geo.json",
-        help="name of geolocation discovery file to write",
+        help="path where to write V1 discovery file to fileystem",
     )
     parser.add_argument("-n", dest="store", action="store_false")
     parser.add_argument(
@@ -270,9 +249,9 @@ if __name__ == "__main__":
         else:
             session = boto3.Session()
         s3 = session.client("s3")
-        old_discovery = download_s3(s3, args["s3_bucket"], args["s3_geo_v1"])
+        old_discovery = download_s3(s3, args["s3_bucket"], args["s3_path"])
     else:
-        old_discovery = get_old_discovery_from_file(args["discovery_geo"])
+        old_discovery = get_old_discovery_from_file(args["file_path"])
     if not "seq" in old_discovery or old_discovery["seq"] == 0:
         old_discovery = get_old_discovery_from_url()
 
@@ -280,17 +259,11 @@ if __name__ == "__main__":
     if args["force"] or discovery_needs_refresh(old_discovery, discovery):
         if args["store"]:
             print("Storing discovery seq %s" % discovery["seq"])
-            store_file(discovery, args["discovery_geo"])
-            store_gzip_file(discovery, args["discovery_geo"] + ".gz")
+            store_file(discovery, args["file_path"])
+            store_gzip_file(discovery, args["file_path"] + ".gz")
         if args["s3_bucket"]:
             print("Uploading discovery seq %s" % discovery["seq"])
-            upload_s3(s3, discovery, args["s3_bucket"], args["s3_geo_v1"])
+            upload_s3(s3, discovery, args["s3_bucket"], args["s3_path"])
 
-        geofilter(discovery)
-        if args["store"]:
-            store_file(discovery, args["discovery_plain"])
-            store_gzip_file(discovery, args["discovery_plain"] + ".gz")
-        if args["s3_bucket"]:
-            upload_s3(s3, discovery, args["s3_bucket"], args["s3_plain_v1"])
     else:
         print("Unchanged %d" % old_discovery["seq"])
