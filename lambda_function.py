@@ -15,8 +15,12 @@ def lambda_handler(event, context):
 
 	discovery = generate(old_serial=old_serial)
 
+	result = ''
 	if discovery_needs_refresh(old_discovery, discovery):
-		print("Uploading discovery serial %s" % discovery["serial"])
 		upload_s3(s3, discovery, os.environ["s3_bucket"], os.environ["s3_path"])
+		result = "Uploaded discovery serial %s" % discovery["serial"]
 	else:
-		print("Unchanged %d" % old_discovery["serial"])
+		result = "Unchanged %d" % old_discovery["serial"]
+
+	print(result) # Goes to CloudWatch
+	return result # Goes to Lambda UI when testing
