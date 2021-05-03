@@ -31,7 +31,12 @@ def discovery_needs_refresh(old_discovery, new_discovery):
 def store_file(discovery, filename):
     with open(filename, "w") as fh:
         json.dump(
-            discovery, fh, separators=(",", ":"), allow_nan=False, sort_keys=True, ensure_ascii=True
+            discovery,
+            fh,
+            separators=(",", ":"),
+            allow_nan=False,
+            sort_keys=True,
+            ensure_ascii=True,
         )
         fh.write("\r\n")
 
@@ -105,21 +110,20 @@ def get_profiles(idp):
     return profiles
 
 
-def generate(old_serial=None):
-    candidate_serial = int(datetime.datetime.utcnow().strftime("%Y%m%d00"))
-    if old_serial == None:
+def generate(old_seq=None):
+    candidate_seq = int(datetime.datetime.utcnow().strftime("%Y%m%d00"))
+    if old_seq == None:
         # Use a high number so we have a better chance to be over
         # Let's hope this doesn't happen more than once a day ;)
-        serial = candidate_serial + 80
-    elif candidate_serial <= old_serial:
-        serial = old_serial + 1
+        seq = candidate_seq + 80
+    elif candidate_seq <= old_seq:
+        seq = old_seq + 1
     else:
-        serial = candidate_serial
+        seq = candidate_seq
 
     return {
         "version": 1,
-        "seq": -1,
-        "serial": serial,
+        "seq": seq,
         "instances": instances(),
     }
 
@@ -170,9 +174,11 @@ def parse_args():
         default="discovery.json",
         help="path where to write V1 discovery file to fileystem",
     )
-    parser.add_argument("-n", dest="store", action="store_false")
     parser.add_argument(
-        "-f", "--force", action="store_true", help="S3 bucket to upload to"
+        "-f",
+        "--force",
+        action="store_true",
+        help="Force writing file even if nothing changed",
     )
     return vars(parser.parse_args())
 
@@ -181,13 +187,13 @@ if __name__ == "__main__":
     args = parse_args()
 
     old_discovery = get_old_discovery_from_file(args["file_path"])
-    if not old_discovery or not "serial" in old_discovery:
+    if not old_discovery or not "seq" in old_discovery:
         old_discovery = None
 
-    discovery = generate(old_serial=old_discovery["serial"] if old_discovery else None)
+    discovery = generate(old_seq=old_discovery["seq"] if old_discovery else None)
     if args["force"] or discovery_needs_refresh(old_discovery, discovery):
-        print("Storing discovery serial %s" % discovery["serial"])
+        print("Storing discovery seq %s" % discovery["seq"])
         store_file(discovery, args["file_path"])
 
     else:
-        print("Unchanged %d" % old_discovery["serial"])
+        print("Unchanged %d" % old_discovery["seq"])

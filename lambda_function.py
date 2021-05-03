@@ -11,16 +11,16 @@ import json
 def lambda_handler(event, context):
 	s3 = boto3.client("s3")
 	old_discovery = download_s3(s3, os.environ["s3_bucket"], os.environ["s3_path"])
-	old_serial = old_discovery["serial"] if old_discovery else None
+	old_seq = old_discovery["seq"] if old_discovery else None
 
-	discovery = generate(old_serial=old_serial)
+	discovery = generate(old_seq=old_seq)
 
-	result = ''
+	result = ""
 	if discovery_needs_refresh(old_discovery, discovery):
 		upload_s3(s3, discovery, os.environ["s3_bucket"], os.environ["s3_path"])
-		result = "Uploaded discovery serial %s" % discovery["serial"]
+		result = "Uploaded discovery seq %s" % discovery["seq"]
 	else:
-		result = "Unchanged %d" % old_discovery["serial"]
+		result = "Unchanged %d" % old_discovery["seq"]
 
 	print(result)  # Goes to CloudWatch
 	return result  # Goes to Lambda UI when testing
