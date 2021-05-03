@@ -13,14 +13,13 @@
 
 3. Do a test-run
 
-		make run
-		cattenbak/cattenbak.py --s3-bucket geteduroam-disco
+		make S3_URL=s3://geteduroam-disco/v1-test/discovery.json upload
 
 
 4. Configure the timer
 	* Modify `cattenbak-update.service` so the path and arguments are correct
 
-			ExecStart=/opt/cattenbak/cattenbak.py --s3-bucket geteduroam-disco
+			ExecStart=/usr/bin/make -b /home/ec2-user/cattenbak/Makefile S3_URL=s3://geteduroam-disco/v1/discovery.json upload
 
 5. Enable the timer
 

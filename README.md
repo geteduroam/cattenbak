@@ -16,7 +16,7 @@ A scraper for cat.eduroam.org that generates discovery files for geteduroam
 
 ... or make sure you use the system python3 and install the correct packages.
 
-1. Modify cattenbak.py to generate the right output
+3. Modify cattenbak.py to generate the right output
 
 Make sure that the files are served with the following headers:
 
@@ -36,11 +36,9 @@ The `Access-Control-*` headers can be set using CORS configuration in S3.
 These are necessary to read the discovery file from a browser using JavaScript.
 
 
-## Upload to Amazon S3
+## Manually upload to Amazon S3
 
-The cattenbak.py script uploads to S3 via the upload_s3() function using the boto3 library.
-
-Make sure that you have the AWS configuration files, or set the correct environment variables with credentials.
+Make sure that you have the AWS configuration files, or set the correct environment variables with credentials, assuming profile name `geteduroam`.
 
 	% cat ~/.aws/config
 	[geteduroam]
@@ -61,6 +59,10 @@ Make sure that the S3 bucket has the following CORS configuration
 			"ExposeHeaders": []
 		}
 	]
+
+Then upload to AWS (assuming profile name `geteduroam`)
+
+	make AWS_PROFILE=geteduroam upload
 
 
 ## systemd timers

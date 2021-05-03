@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 import requests
 import json
-import gzip
 import datetime
-import boto3
 import argparse
 
 cat_api = "https://cat.eduroam.org/new_test/user/API.php"
@@ -30,64 +28,12 @@ def discovery_needs_refresh(old_discovery, new_discovery):
     )
 
 
-def upload_s3(s3, discovery, s3_bucket, s3_file):
-    discovery_body = gzip.compress(
-        json.dumps(
-            discovery, separators=(",", ":"), allow_nan=False, sort_keys=True, ensure_ascii=True
-        ).encode("ascii")
-        + b"\r\n"
-    )
-    result = s3.put_object(
-        Bucket=s3_bucket,
-        Key=s3_file,
-        Body=discovery_body,
-        CacheControl="public, max-age=900, s-maxage=300, stale-while-revalidate=86400, stale-if-error=2592000",
-        ContentEncoding="gzip",
-        ContentType="application/json",
-        ACL="public-read",
-    )
-    if result["ResponseMetadata"]["HTTPStatusCode"] != 200:
-        raise Exception(
-            "Wrong status code " + result["ResponseMetadata"]["HTTPStatusCode"]
-        )
-
-
-def download_s3(s3, s3_bucket, s3_file):
-    try:
-        response = s3.get_object(
-            Bucket=s3_bucket,
-            Key=s3_file,
-        )
-    except s3.exceptions.NoSuchKey as e:
-        print(e)
-        return None
-    except s3.exceptions.InvalidObjectState:
-        print(e)
-        return None
-
-    try:
-        return json.loads(gzip.decompress(response["Body"].read()).decode("utf-8"))
-    except json.decoder.JSONDecodeError as e:
-        print(e)
-        return None
-
-
 def store_file(discovery, filename):
     with open(filename, "w") as fh:
         json.dump(
             discovery, fh, separators=(",", ":"), allow_nan=False, sort_keys=True, ensure_ascii=True
         )
         fh.write("\r\n")
-
-
-def store_gzip_file(discovery, filename):
-    with gzip.open(filename, "wb") as fh:
-        fh.write(
-            json.dumps(
-                discovery, separators=(",", ":"), allow_nan=False, sort_keys=True, ensure_ascii=True
-            ).encode("ascii")
-            + b"\r\n"
-        )
 
 
 def get_preferred_name(names, country):
@@ -217,23 +163,6 @@ def instances():
 def parse_args():
     parser = argparse.ArgumentParser(description="Generate geteduroam discovery files")
     parser.add_argument(
-        "--aws-session",
-        nargs="?",
-        metavar="SESSION",
-        help="AWS session from ~/.aws to use",
-    )
-    parser.add_argument(
-        "--s3-bucket", nargs="?", metavar="BUCKET", help="S3 bucket to upload to"
-    )
-    parser.add_argument(
-        "--s3-path",
-        nargs="?",
-        metavar="PATH",
-        dest="s3_path",
-        default="v1/discovery.json",
-        help="path where to write V1 discovery file in S3",
-    )
-    parser.add_argument(
         "--file-path",
         nargs="?",
         metavar="FILE",
@@ -251,27 +180,14 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
 
-    if args["s3_bucket"]:
-        if args["aws_session"]:
-            session = boto3.Session(profile_name=args["aws_session"])
-        else:
-            session = boto3.Session()
-        s3 = session.client("s3")
-        old_discovery = download_s3(s3, args["s3_bucket"], args["s3_path"])
-    else:
-        old_discovery = get_old_discovery_from_file(args["file_path"])
+    old_discovery = get_old_discovery_from_file(args["file_path"])
     if not old_discovery or not "serial" in old_discovery:
         old_discovery = None
 
     discovery = generate(old_serial=old_discovery["serial"] if old_discovery else None)
     if args["force"] or discovery_needs_refresh(old_discovery, discovery):
-        if args["store"]:
-            print("Storing discovery serial %s" % discovery["serial"])
-            store_file(discovery, args["file_path"])
-            store_gzip_file(discovery, args["file_path"] + ".gz")
-        if args["s3_bucket"]:
-            print("Uploading discovery serial %s" % discovery["serial"])
-            upload_s3(s3, discovery, args["s3_bucket"], args["s3_path"])
+        print("Storing discovery serial %s" % discovery["serial"])
+        store_file(discovery, args["file_path"])
 
     else:
         print("Unchanged %d" % old_discovery["serial"])
