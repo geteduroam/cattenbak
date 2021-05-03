@@ -36,6 +36,14 @@ The `Access-Control-*` headers can be set using CORS configuration in S3.
 These are necessary to read the discovery file from a browser using JavaScript.
 
 
+## Run on Amazon Lambda
+
+The code can be uploaded to Amazon Lambda using the AWS command line utility.
+
+The simplest way to do this is to use `make deploy`,
+see [the steps to do this](contrib/AWS-LAMBDA.md).
+
+
 ## Manually upload to Amazon S3
 
 Make sure that you have the AWS configuration files, or set the correct environment variables with credentials, assuming profile name `geteduroam`.

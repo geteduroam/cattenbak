@@ -1,8 +1,8 @@
-# Installation on AWS Lambda instance
+# Installation on AWS Lambda instance (manual)
 
 1. Create an empty Lambda instance, and give it a role that can write to the correct S3 bucket
 
-2. Run `make cattenbak.zip` and upload it to the Lambda function
+2. Run `make cattenbak.zip` and upload it to the Lambda function, this can also be done with `make deploy`
 
 3. Go to **Configuration** -> **General configuration** -> **Edit**
 

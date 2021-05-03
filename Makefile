@@ -1,6 +1,7 @@
 AWS_PROFILE :=
 AWS_REGION := eu-central-1
 S3_URL := s3://geteduroam-disco/v1-test/discovery.json
+LAMBDA_FUNCTION := cattenbak
 
 
 cattenbak/cattenbak.py: cattenbak cattenbak.py
@@ -39,6 +40,17 @@ upload: discovery.json.gz
 		--acl public-read \
 		--cache-control "public, max-age=900, s-maxage=300, stale-while-revalidate=86400, stale-if-error=2592000"
 .PHONY: upload
+
+
+deploy: cattenbak.zip
+	aws --region '$(AWS_REGION)' --profile '$(AWS_PROFILE)' lambda \
+		update-function-code --function-name $(LAMBDA_FUNCTION) --zip-file fileb://cattenbak.zip
+	@echo
+	@echo Please test the deployed function on the following URL:
+	@echo
+	@echo '	https://$(AWS_REGION).console.aws.amazon.com/lambda/home?region=$(AWS_REGION)#/functions/$(LAMBDA_FUNCTION)?tab=testing'
+	@echo
+.PHONY: deploy
 
 
 clean:
