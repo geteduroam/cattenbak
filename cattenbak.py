@@ -129,6 +129,7 @@ def generate(old_seq: int = None):
 
 
 def instances() -> list:
+    idp_names = []
     instances = []
 
     r_list_everything = requests.get(
@@ -138,6 +139,19 @@ def instances() -> list:
 
     for idp in data:
         idp_name = get_preferred_name(data[idp]["names"], data[idp]["country"])
+
+        # Filter out duplicates
+        if idp_name in idp_names:
+            found = False
+            for previous_idp in instances:
+                if previous_idp["name"] == idp_name and previous_idp["country"] != data[idp]["country"]:
+                    previous_idp["name"] = "%s [%s]" % (idp_name, previous_idp["country"])
+                    found = True
+            if found:
+                idp_name = "%s [%s]" % (idp_name, data[idp]["country"])
+            else:
+                pass # it's a duplicate within it's own country
+        idp_names.append(idp_name)
 
         geo = []
         if "geo" in data[idp]:
