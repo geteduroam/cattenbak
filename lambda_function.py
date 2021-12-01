@@ -26,7 +26,7 @@ def lambda_handler(event, context):
 	return result  # Goes to Lambda UI when testing
 
 
-def upload_s3(s3, discovery, s3_bucket, s3_file):
+def upload_s3(s3, discovery: str, s3_bucket: str, s3_file: str):
 	discovery_body = gzip.compress(
 		json.dumps(
 			discovery,
@@ -52,7 +52,7 @@ def upload_s3(s3, discovery, s3_bucket, s3_file):
 		)
 
 
-def download_s3(s3, s3_bucket, s3_file):
+def download_s3(s3, s3_bucket: str, s3_file: str):
 	try:
 		response = s3.get_object(
 			Bucket=s3_bucket,

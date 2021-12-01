@@ -8,7 +8,7 @@ cat_api = "https://cat.eduroam.org/new_test/user/API.php"
 cat_download_api = "https://cat.eduroam.org/user/API.php"
 
 
-def get_old_discovery_from_file(filename):
+def get_old_discovery_from_file(filename: str) -> list:
     try:
         with open(filename, "r") as fh:
             return json.load(fh)
@@ -20,7 +20,7 @@ def get_old_discovery_from_file(filename):
         return None
 
 
-def discovery_needs_refresh(old_discovery, new_discovery):
+def discovery_needs_refresh(old_discovery: list, new_discovery: list) -> bool:
     return (
         old_discovery == None
         or "instances" not in old_discovery
@@ -28,7 +28,7 @@ def discovery_needs_refresh(old_discovery, new_discovery):
     )
 
 
-def store_file(discovery, filename):
+def store_file(discovery: list, filename: str):
     with open(filename, "w") as fh:
         json.dump(
             discovery,
@@ -41,7 +41,7 @@ def store_file(discovery, filename):
         fh.write("\r\n")
 
 
-def get_preferred_name(names, country):
+def get_preferred_name(names: list, country: str) -> str:
     if len(names) == 0:
         return None
     lang = {}
@@ -57,7 +57,7 @@ def get_preferred_name(names, country):
         return names[0]["value"]
 
 
-def get_profiles(idp):
+def get_profiles(idp: list) -> list:
     profiles = []
     if "profiles" in idp:
         profile_default = True
@@ -110,7 +110,7 @@ def get_profiles(idp):
     return profiles
 
 
-def generate(old_seq=None):
+def generate(old_seq: int = None):
     candidate_seq = int(datetime.datetime.utcnow().strftime("%Y%m%d00"))
     if old_seq == None:
         # Use a high number so we have a better chance to be over
@@ -128,7 +128,7 @@ def generate(old_seq=None):
     }
 
 
-def instances():
+def instances() -> list:
     instances = []
 
     r_list_everything = requests.get(
@@ -166,7 +166,7 @@ def instances():
     return sorted(instances, key=lambda idp: idp["name"])
 
 
-def parse_args():
+def parse_args() -> list:
     parser = argparse.ArgumentParser(description="Generate geteduroam discovery files")
     parser.add_argument(
         "--file-path",
