@@ -227,11 +227,7 @@ if __name__ == "__main__":
         old_discovery = None
 
     discovery = generate(old_seq=old_discovery["seq"] if old_discovery else None)
-    if (
-        args["force"]
-        or old_discovery is None
-        or discovery_needs_refresh(old_discovery, discovery)
-    ):
+    if args["force"] or discovery_needs_refresh(old_discovery, discovery):
         print("Storing discovery seq %s" % discovery["seq"])
         store_file(discovery, args["file_path"])
 
