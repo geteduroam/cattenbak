@@ -3,12 +3,13 @@ import requests
 import json
 import datetime
 import argparse
+from typing import Optional, List, Any, Dict, Set
 
 cat_api = "https://cat.eduroam.org/new_test/user/API.php"
 cat_download_api = "https://cat.eduroam.org/user/API.php"
 
 
-def get_old_discovery_from_file(filename: str) -> list:
+def get_old_discovery_from_file(filename: str) -> Optional[Dict]:
     try:
         with open(filename, "r") as fh:
             return json.load(fh)
@@ -20,15 +21,16 @@ def get_old_discovery_from_file(filename: str) -> list:
         return None
 
 
-def discovery_needs_refresh(old_discovery: list, new_discovery: list) -> bool:
+def discovery_needs_refresh(
+    old_discovery: Dict[str, List], new_discovery: Dict[str, List]
+) -> bool:
     return (
-        old_discovery == None
-        or "instances" not in old_discovery
+        "instances" not in old_discovery
         or not old_discovery["instances"] == new_discovery["instances"]
     )
 
 
-def store_file(discovery: list, filename: str):
+def store_file(discovery: List, filename: str):
     with open(filename, "w") as fh:
         json.dump(
             discovery,
@@ -41,7 +43,7 @@ def store_file(discovery: list, filename: str):
         fh.write("\r\n")
 
 
-def get_preferred_name(names: list, country: str) -> str:
+def get_preferred_name(names: List, country: str) -> Optional[str]:
     if len(names) == 0:
         return None
     lang = {}
@@ -57,13 +59,13 @@ def get_preferred_name(names: list, country: str) -> str:
         return names[0]["value"]
 
 
-def get_profiles(idp: list) -> list:
+def get_profiles(idp: Dict) -> List:
     profiles = []
     if "profiles" in idp:
         profile_default = True
         for profile in idp["profiles"]:
             profile_name = get_preferred_name(profile["names"], idp["country"])
-            if profile_name == None:
+            if profile_name is None:
                 profile_name = get_preferred_name(idp["names"], idp["country"])
             letswifi_url = ""
             redirect_url = ""
@@ -112,7 +114,7 @@ def get_profiles(idp: list) -> list:
 
 def generate(old_seq: int = None):
     candidate_seq = int(datetime.datetime.utcnow().strftime("%Y%m%d00"))
-    if old_seq == None:
+    if old_seq is None:
         # Use a high number so we have a better chance to be over
         # Let's hope this doesn't happen more than once a day ;)
         seq = candidate_seq + 80
@@ -128,30 +130,39 @@ def generate(old_seq: int = None):
     }
 
 
-def instances() -> list:
-    idp_names = []
-    instances = []
+def instances() -> List:
+    idp_names: Set[str] = set()
+    instances: List[Any] = []
 
-    r_list_everything = requests.get(
+    r_List_everything = requests.get(
         cat_api + "?action=listIdentityProvidersWithProfiles"
     )
-    data = r_list_everything.json()["data"]
+    data = r_List_everything.json()["data"]
 
     for idp in data:
         idp_name = get_preferred_name(data[idp]["names"], data[idp]["country"])
+        if idp_name is None:
+            raise ValueError(f"EntityID {data[idp]['entityID']} has no names")
 
         # Filter out duplicates
         if idp_name in idp_names:
             found = False
             for previous_idp in instances:
-                if previous_idp["name"] == idp_name and previous_idp["country"] != data[idp]["country"]:
-                    previous_idp["name"] = "%s [%s]" % (idp_name, previous_idp["country"])
+                if (
+                    previous_idp["name"] == idp_name
+                    and previous_idp["country"] != data[idp]["country"]
+                ):
+                    previous_idp["name"] = "%s [%s]" % (
+                        idp_name,
+                        previous_idp["country"],
+                    )
                     found = True
             if found:
                 idp_name = "%s [%s]" % (idp_name, data[idp]["country"])
             else:
-                pass # it's a duplicate within it's own country
-        idp_names.append(idp_name)
+                pass  # it's a duplicate within it's own country
+
+        idp_names.add(idp_name)
 
         geo = []
         if "geo" in data[idp]:
@@ -180,7 +191,7 @@ def instances() -> list:
     return sorted(instances, key=lambda idp: idp["name"])
 
 
-def parse_args() -> list:
+def parse_args() -> Dict[str, str]:
     parser = argparse.ArgumentParser(description="Generate geteduroam discovery files")
     parser.add_argument(
         "--file-path",
@@ -207,7 +218,11 @@ if __name__ == "__main__":
         old_discovery = None
 
     discovery = generate(old_seq=old_discovery["seq"] if old_discovery else None)
-    if args["force"] or discovery_needs_refresh(old_discovery, discovery):
+    if (
+        args["force"]
+        or old_discovery is None
+        or discovery_needs_refresh(old_discovery, discovery)
+    ):
         print("Storing discovery seq %s" % discovery["seq"])
         store_file(discovery, args["file_path"])
 
