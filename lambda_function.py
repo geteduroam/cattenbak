@@ -13,7 +13,9 @@ def lambda_handler(event, context) -> str:
 	s3 = boto3.client("s3")
 	old_discovery = download_s3(s3, os.environ["s3_bucket"], os.environ["s3_path"])
 	if isinstance(old_discovery, Dict):
-		old_seq = old_discovery["seq"] if isinstance(old_discovery["seq"], int) else None
+		old_seq = (
+			old_discovery["seq"] if isinstance(old_discovery["seq"], int) else None
+		)
 	else:
 		old_discovery = None
 		old_seq = None
@@ -21,10 +23,7 @@ def lambda_handler(event, context) -> str:
 	discovery = generate(old_seq=old_seq)
 	assert isinstance(discovery, Dict)
 
-	if (
-		old_seq is None
-		or discovery_needs_refresh(old_discovery, discovery)
-	):
+	if old_seq is None or discovery_needs_refresh(old_discovery, discovery):
 		upload_s3(s3, discovery, os.environ["s3_bucket"], os.environ["s3_path"])
 		result = "Uploaded discovery seq %s" % discovery["seq"]
 	else:

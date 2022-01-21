@@ -21,9 +21,7 @@ def get_old_discovery_from_file(filename: str) -> Optional[Dict]:
         return None
 
 
-def discovery_needs_refresh(
-    old_discovery: Optional[Dict], new_discovery: Dict
-) -> bool:
+def discovery_needs_refresh(old_discovery: Optional[Dict], new_discovery: Dict) -> bool:
     if old_discovery is None:
         return True
 
@@ -31,7 +29,11 @@ def discovery_needs_refresh(
     new_instances = new_discovery["instances"] if "instances" in new_discovery else None
 
     assert isinstance(new_instances, List)
-    if not isinstance(old_instances, List) or old_instances is None or new_instances is None:
+    if (
+        not isinstance(old_instances, List)
+        or old_instances is None
+        or new_instances is None
+    ):
         return True
 
     return not old_instances == new_instances
