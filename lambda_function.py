@@ -7,7 +7,7 @@ import os
 import gzip
 import json
 from typing import Optional, List, Any, Dict, Set, Union
-from typing_extensions import TypeGuard
+#from typing_extensions import TypeGuard # Wait until Python 3.10
 
 
 def lambda_handler(event, context) -> str:
@@ -24,7 +24,8 @@ def lambda_handler(event, context) -> str:
 	if (
 		old_seq is None
 		or not is_list_dict(old_discovery)
-		or discovery_needs_refresh(old_discovery, discovery)
+		# remove ignore on Python 3.10
+		or discovery_needs_refresh(old_discovery, discovery) # type: ignore
 	):
 		upload_s3(s3, discovery, os.environ["s3_bucket"], os.environ["s3_path"])
 		result = "Uploaded discovery seq %s" % discovery["seq"]
@@ -83,5 +84,6 @@ def download_s3(
 		return None
 
 
-def is_list_dict(val: Optional[Dict[str, Any]]) -> TypeGuard[Dict[str, List]]:
+#def is_list_dict(val: Optional[Dict[str, Any]]) -> TypeGuard[Dict[str, List]]: # Wait until Python 3.10
+def is_list_dict(val: Optional[Dict[str, Any]]) -> bool:
 	return val is not None and all(isinstance(x, List) for x in val.values())
