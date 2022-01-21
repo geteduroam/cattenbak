@@ -59,6 +59,5 @@ clean:
 
 
 camera-ready:
-	python3 -m pip install --user mypy
 	python3 -m mypy cattenbak.py lambda_function.py
 .PHONY: camera-ready

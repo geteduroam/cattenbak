@@ -7,25 +7,23 @@ import os
 import gzip
 import json
 from typing import Optional, List, Any, Dict, Set, Union
-#from typing_extensions import TypeGuard # Wait until Python 3.10
 
 
 def lambda_handler(event, context) -> str:
 	s3 = boto3.client("s3")
 	old_discovery = download_s3(s3, os.environ["s3_bucket"], os.environ["s3_path"])
-	old_seq = (
-		old_discovery["seq"]
-		if old_discovery and isinstance(old_discovery["seq"], int)
-		else None
-	)
+	if isinstance(old_discovery, Dict):
+		old_seq = old_discovery["seq"] if isinstance(old_discovery["seq"], int) else None
+	else:
+		old_discovery = None
+		old_seq = None
 
 	discovery = generate(old_seq=old_seq)
+	assert isinstance(discovery, Dict)
 
 	if (
 		old_seq is None
-		or not is_list_dict(old_discovery)
-		# remove ignore on Python 3.10
-		or discovery_needs_refresh(old_discovery, discovery) # type: ignore
+		or discovery_needs_refresh(old_discovery, discovery)
 	):
 		upload_s3(s3, discovery, os.environ["s3_bucket"], os.environ["s3_path"])
 		result = "Uploaded discovery seq %s" % discovery["seq"]
@@ -36,7 +34,7 @@ def lambda_handler(event, context) -> str:
 	return result  # Goes to Lambda UI when testing
 
 
-def upload_s3(s3, discovery: str, s3_bucket: str, s3_file: str) -> None:
+def upload_s3(s3, discovery: Dict, s3_bucket: str, s3_file: str) -> None:
 	discovery_body = gzip.compress(
 		json.dumps(
 			discovery,
@@ -64,7 +62,7 @@ def upload_s3(s3, discovery: str, s3_bucket: str, s3_file: str) -> None:
 
 def download_s3(
 	s3, s3_bucket: str, s3_file: str
-) -> Optional[Dict[str, Union[List, int]]]:
+) -> Optional[Dict[str, Union[List, str, int]]]:
 	try:
 		response = s3.get_object(
 			Bucket=s3_bucket,
@@ -82,8 +80,3 @@ def download_s3(
 	except json.decoder.JSONDecodeError as e:
 		print(e)
 		return None
-
-
-#def is_list_dict(val: Optional[Dict[str, Any]]) -> TypeGuard[Dict[str, List]]: # Wait until Python 3.10
-def is_list_dict(val: Optional[Dict[str, Any]]) -> bool:
-	return val is not None and all(isinstance(x, List) for x in val.values())

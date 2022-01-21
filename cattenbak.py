@@ -22,12 +22,19 @@ def get_old_discovery_from_file(filename: str) -> Optional[Dict]:
 
 
 def discovery_needs_refresh(
-    old_discovery: Dict[str, List], new_discovery: Dict[str, List]
+    old_discovery: Optional[Dict], new_discovery: Dict
 ) -> bool:
-    return (
-        "instances" not in old_discovery
-        or not old_discovery["instances"] == new_discovery["instances"]
-    )
+    if old_discovery is None:
+        return True
+
+    old_instances = old_discovery["instances"] if "instances" in old_discovery else None
+    new_instances = new_discovery["instances"] if "instances" in new_discovery else None
+
+    assert isinstance(new_instances, List)
+    if not isinstance(old_instances, List) or old_instances is None or new_instances is None:
+        return True
+
+    return not old_instances == new_instances
 
 
 def store_file(discovery: List, filename: str):
