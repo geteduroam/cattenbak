@@ -73,22 +73,21 @@ def get_profiles(idp: Dict) -> List:
             profile_name = get_preferred_name(profile["names"], idp["country"])
             if profile_name is None:
                 profile_name = get_preferred_name(idp["names"], idp["country"])
-            letswifi_url = ""
-            redirect_url = ""
             if profile["redirect"]:
                 if "#letswifi" in profile["redirect"]:
                     # todo: visit .well-known/letswifi.json for actual endpoints
+
+                    # Get base URL for OAuth flow
                     parsed_url = urllib.parse.urlparse(profile["redirect"])._replace(fragment="")
-                    if len(parsed_url.path) > 0 and parsed_url.path[-1] != "/":
-                        parsed_url = parsed_url._replace(path=parsed_url.path + "/")
+                    parsed_url = parsed_url._replace(path=parsed_url.path.rstrip("/"))
                     profiles.append(
                         {
                             "id": "letswifi_cat_%s" % (profile["id"]),
                             "name": profile_name,
                             "default": profile_default,
-                            "eapconfig_endpoint": parsed_url._replace(path=parsed_url.path + "api/eap-config/").geturl(),
-                            "token_endpoint": parsed_url._replace(path=parsed_url.path + "oauth/token/").geturl(),
-                            "authorization_endpoint": parsed_url._replace(path=parsed_url.path + "oauth/authorize/").geturl(),
+                            "eapconfig_endpoint": parsed_url._replace(path=parsed_url.path + "/api/eap-config/").geturl(),
+                            "token_endpoint": parsed_url._replace(path=parsed_url.path + "/oauth/token/").geturl(),
+                            "authorization_endpoint": parsed_url._replace(path=parsed_url.path + "/oauth/authorize/").geturl(),
                             "oauth": True,
                         }
                     )
@@ -106,7 +105,7 @@ def get_profiles(idp: Dict) -> List:
                     {
                         "id": "cat_%s" % (profile["id"]),
                         "name": profile_name,
-                        "eapconfig_endpoint": cat_download_api + "?action=downloadInstaller&device=eap-generic&profile=%s" % (profile["id"]),
+                        "eapconfig_endpoint": "%s?action=downloadInstaller&device=eap-generic&profile=%s" % (cat_download_api, profile["id"]),
                         "oauth": False,
                     }
                 )
