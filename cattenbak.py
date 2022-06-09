@@ -3,6 +3,7 @@ import requests
 import json
 import datetime
 import argparse
+import urllib.parse
 from typing import Optional, List, Any, Dict, Set
 
 cat_api = "https://cat.eduroam.org/new_test/user/API.php"
@@ -29,11 +30,7 @@ def discovery_needs_refresh(old_discovery: Optional[Dict], new_discovery: Dict) 
     new_instances = new_discovery["instances"] if "instances" in new_discovery else None
 
     assert isinstance(new_instances, List)
-    if (
-        not isinstance(old_instances, List)
-        or old_instances is None
-        or new_instances is None
-    ):
+    if not isinstance(old_instances, List) or old_instances is None or new_instances is None:
         return True
 
     return not old_instances == new_instances
@@ -80,41 +77,36 @@ def get_profiles(idp: Dict) -> List:
             redirect_url = ""
             if profile["redirect"]:
                 if "#letswifi" in profile["redirect"]:
-                    letswifi_url = profile["redirect"].split("#", 1)[0]
+                    # todo: visit .well-known/letswifi.json for actual endpoints
+                    parsed_url = urllib.parse.urlparse(profile["redirect"])._replace(fragment="")
+                    if len(parsed_url.path) > 0 and parsed_url.path[-1] != "/":
+                        parsed_url = parsed_url._replace(path=parsed_url.path + "/")
+                    profiles.append(
+                        {
+                            "id": "letswifi_cat_%s" % (profile["id"]),
+                            "name": profile_name,
+                            "default": profile_default,
+                            "eapconfig_endpoint": parsed_url._replace(path=parsed_url.path + "api/eap-config/").geturl(),
+                            "token_endpoint": parsed_url._replace(path=parsed_url.path + "oauth/token/").geturl(),
+                            "authorization_endpoint": parsed_url._replace(path=parsed_url.path + "oauth/authorize/").geturl(),
+                            "oauth": True,
+                        }
+                    )
+                    profile_default = False
                 else:
-                    redirect_url = profile["redirect"]
-            if letswifi_url:
-                # todo: visit .well-known/letswifi.json for actual endpoints
-                if letswifi_url[-1] != "/":
-                    letswifi_url += "/"
-                profiles.append(
-                    {
-                        "id": "letswifi_cat_%s" % (profile["id"]),
-                        "name": profile_name,
-                        "default": profile_default,
-                        "eapconfig_endpoint": letswifi_url + "api/eap-config/",
-                        "token_endpoint": letswifi_url + "oauth/token/",
-                        "authorization_endpoint": letswifi_url + "oauth/authorize/",
-                        "oauth": True,
-                    }
-                )
-                profile_default = False
-            elif redirect_url:
-                profiles.append(
-                    {
-                        "id": "cat_%s" % (profile["id"]),
-                        "redirect": redirect_url,
-                        "name": profile_name,
-                    }
-                )
+                    profiles.append(
+                        {
+                            "id": "cat_%s" % (profile["id"]),
+                            "redirect": profile["redirect"],
+                            "name": profile_name,
+                        }
+                    )
             else:
                 profiles.append(
                     {
                         "id": "cat_%s" % (profile["id"]),
                         "name": profile_name,
-                        "eapconfig_endpoint": cat_download_api
-                        + "?action=downloadInstaller&device=eap-generic&profile=%s"
-                        % (profile["id"]),
+                        "eapconfig_endpoint": cat_download_api + "?action=downloadInstaller&device=eap-generic&profile=%s" % (profile["id"]),
                         "oauth": False,
                     }
                 )
@@ -143,9 +135,7 @@ def instances() -> List:
     idp_names: Set[str] = set()
     instances: List[Any] = []
 
-    r_List_everything = requests.get(
-        cat_api + "?action=listIdentityProvidersWithProfiles"
-    )
+    r_List_everything = requests.get(cat_api + "?action=listIdentityProvidersWithProfiles")
     data = r_List_everything.json()["data"]
 
     for idp in data:
@@ -157,10 +147,7 @@ def instances() -> List:
         if idp_name in idp_names:
             found = False
             for previous_idp in instances:
-                if (
-                    previous_idp["name"] == idp_name
-                    and previous_idp["country"] != data[idp]["country"]
-                ):
+                if previous_idp["name"] == idp_name and previous_idp["country"] != data[idp]["country"]:
                     previous_idp["name"] = "%s [%s]" % (
                         idp_name,
                         previous_idp["country"],
