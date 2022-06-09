@@ -11,7 +11,7 @@ from typing import Optional, List, Any, Dict, Set, Union
 
 def lambda_handler(event, context) -> str:
 	s3 = boto3.client("s3")
-	old_discovery = download_s3(s3, os.environ["s3_bucket"], os.environ["s3_path"])
+	old_discovery = download_s3(s3, os.environ["s3_bucket"], os.environ["s3_read_path"])
 	if isinstance(old_discovery, Dict):
 		old_seq = (
 			old_discovery["seq"] if isinstance(old_discovery["seq"], int) else None
@@ -24,7 +24,7 @@ def lambda_handler(event, context) -> str:
 	assert isinstance(discovery, Dict)
 
 	if old_seq is None or discovery_needs_refresh(old_discovery, discovery):
-		upload_s3(s3, discovery, os.environ["s3_bucket"], os.environ["s3_path"])
+		upload_s3(s3, discovery, os.environ["s3_bucket"], os.environ["s3_write_path"])
 		result = "Uploaded discovery seq %s" % discovery["seq"]
 	else:
 		result = "Unchanged %d" % old_seq

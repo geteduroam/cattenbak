@@ -14,9 +14,10 @@
 
 7. Go to **Configuration** -> **Environment variables** -> **Edit**
 
-8. Set the following variables
+8. Set the following variables (remove `-staging` when going for production)
 
-| Key         | Value                 |
-|-------------|-----------------------|
-| s3_bucket   | geteduroam-disco      |
-| s3_path     | v1/discovery.json     |
+| Key               | Value                       |
+|-------------------|-----------------------------|
+| **s3_bucket**     | `geteduroam-disco`          |
+| **s3_read_path**  | `v1/discovery.json`         |
+| **s3_write_path** | `v1-staging/discovery.json` |
