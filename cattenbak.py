@@ -6,7 +6,7 @@ import argparse
 import urllib.parse
 from typing import Optional, List, Any, Dict, Set
 
-cat_api = "https://cat.eduroam.org/new_test/user/API.php"
+cat_api = "https://cat.eduroam.org/user/API.php"
 cat_download_api = "https://cat.eduroam.org/user/API.php"
 
 
