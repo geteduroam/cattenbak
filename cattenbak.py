@@ -139,49 +139,47 @@ def instances() -> List:
 
     for idp in data:
         idp_name = get_preferred_name(data[idp]["names"], data[idp]["country"])
-        if idp_name is None:
-            raise ValueError(f"EntityID {data[idp]['entityID']} has no names")
+        if idp_name is not None:
+            # Filter out duplicates
+            if idp_name in idp_names:
+                found = False
+                for previous_idp in instances:
+                    if previous_idp["name"] == idp_name and previous_idp["country"] != data[idp]["country"]:
+                        previous_idp["name"] = "%s [%s]" % (
+                            idp_name,
+                            previous_idp["country"],
+                        )
+                        found = True
+                if found:
+                    idp_name = "%s [%s]" % (idp_name, data[idp]["country"])
+                else:
+                    pass  # it's a duplicate within it's own country
 
-        # Filter out duplicates
-        if idp_name in idp_names:
-            found = False
-            for previous_idp in instances:
-                if previous_idp["name"] == idp_name and previous_idp["country"] != data[idp]["country"]:
-                    previous_idp["name"] = "%s [%s]" % (
-                        idp_name,
-                        previous_idp["country"],
+            idp_names.add(idp_name)
+
+            geo = []
+            if "geo" in data[idp]:
+                for coords in data[idp]["geo"]:
+                    geo.append(
+                        {
+                            "lon": round(float(coords["lon"]), 3),
+                            "lat": round(float(coords["lat"]), 3),
+                        }
                     )
-                    found = True
-            if found:
-                idp_name = "%s [%s]" % (idp_name, data[idp]["country"])
-            else:
-                pass  # it's a duplicate within it's own country
 
-        idp_names.add(idp_name)
+            profiles = get_profiles(data[idp])
 
-        geo = []
-        if "geo" in data[idp]:
-            for coords in data[idp]["geo"]:
-                geo.append(
+            if profiles:
+                instances.append(
                     {
-                        "lon": round(float(coords["lon"]), 3),
-                        "lat": round(float(coords["lat"]), 3),
+                        "id": "cat_%s" % data[idp]["entityID"],
+                        "name": idp_name,
+                        "country": data[idp]["country"],
+                        "cat_idp": int(data[idp]["entityID"]),
+                        "geo": geo,
+                        "profiles": profiles,
                     }
                 )
-
-        profiles = get_profiles(data[idp])
-
-        if profiles:
-            instances.append(
-                {
-                    "id": "cat_%s" % data[idp]["entityID"],
-                    "name": idp_name,
-                    "country": data[idp]["country"],
-                    "cat_idp": int(data[idp]["entityID"]),
-                    "geo": geo,
-                    "profiles": profiles,
-                }
-            )
 
     return sorted(instances, key=lambda idp: idp["name"])
 
