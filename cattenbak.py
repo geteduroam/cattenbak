@@ -48,16 +48,25 @@ def getLocalisedName(
 
 	countryLangs = getLanguagesForCountry(country)
 	nonEnglishCountryLangs = list(filter(lambda l: not l == "en", countryLangs))
-	if nonEnglishCountryLangs and "en" in languageDict.keys() and "any" in languageDict.keys() and getFirstCommonMember(nonEnglishCountryLangs, languageDict.keys()) is None:
-		# Here someone has set multiple languages, at least "en" and "any",
-		# but they have not set a language that is local to their own country! Weird..
-		# This could be because CAT doesn't allow you to set any language
-		# that CAT itself is not translated in.  So it could be a way to put both languages anyway,
-		# but it's not correct.  It's far more likely that they meant to do this:
-		englishName = languageDict.pop("en")
-		localName = languageDict.pop("any")
-		languageDict["any"] = englishName
-		languageDict[nonEnglishCountryLangs[0]] = localName
+	nonEnglishLanguageDict = {k: v for k, v in languageDict.items() if not k in ["any", "en"]}
+	if nonEnglishCountryLangs and "en" in languageDict.keys() and "any" in languageDict.keys() and not languageDict["any"] in nonEnglishLanguageDict.values():
+		# Is there a language for this country that isn't set yet?
+		localLanguage = ''
+		for language in nonEnglishCountryLangs:
+			if not language in languageDict.keys():
+				localLanguage = language
+				break
+
+		if localLanguage:
+			# Here someone has set multiple languages, at least "en" and "any",
+			# but they have not set a language that is local to their own country! Weird..
+			# This could be because CAT doesn't allow you to set any language
+			# that CAT itself is not translated in.  So it could be a way to put both languages anyway,
+			# but it's not correct.  It's far more likely that they meant to do this:
+			englishName = languageDict.pop("en")
+			localName = languageDict.pop("any")
+			languageDict["any"] = englishName
+			languageDict[localLanguage] = localName
 
 	if not "any" in languageDict.keys():
 		countryLangs.insert(0, "en")
