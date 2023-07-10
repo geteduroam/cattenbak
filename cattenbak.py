@@ -169,17 +169,18 @@ def generateInstitution(instData: Dict[str, Any], lang: str):
 	}
 
 
-def generateProfile(catProfile: Dict, lang: str, country: str) -> Dict[str, str]:
+def generateProfile(catProfile: Dict, lang: str, country: str) -> Optional[Dict[str, str]]:
 	if catProfile["redirect"]:
-		if "#letswifi" in catProfile["redirect"]:
-			letswifi_url = urllib.parse.urlparse(catProfile["redirect"])._replace(
-				fragment=""
-			)
+		redirect_url = urllib.parse.urlparse(catProfile["redirect"])
+		if not redirect_url.scheme == 'https' and not redirect_url.scheme == 'http':
+			return None
+		frag = redirect_url.fragment.split("&")
+		if "letswifi" in frag:
 			return {
 				"id": "cat_profile_%s" % catProfile["id"],
 				"name": getLocalisedName(catProfile["names"], lang, country),
 				"type": "letswifi",
-				"letswifi_endpoint": letswifi_url.geturl(),
+				"letswifi_endpoint": redirect_url._replace(fragment="").geturl(),
 			}
 		else:
 			return {
