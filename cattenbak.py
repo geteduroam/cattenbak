@@ -6,6 +6,7 @@ import argparse
 import urllib.parse
 import sys
 from typing import Optional, List, Any, Dict, Set
+from i18n import getLanguagesForCountry
 
 cat_api = "https://cat.eduroam.org/user/API.php"
 
@@ -22,87 +23,6 @@ def getProfilesFromCat() -> Dict:
 	assert "data" in data
 	assert data["status"] == 1
 	return data["data"]
-
-
-def getLanguagesForCountry(country: str) -> List[str]:
-	d: Dict[str, List[str]] = {
-		"AL": ["sq"],
-		"AM": ["hy"],
-		"AR": ["es"],
-		"AT": ["de", "sl"],
-		"AU": ["en"],
-		"BD": ["bn"],
-		"BE": ["nl", "fr"],
-		"BG": ["bg"],
-		"BR": ["pt"],
-		"CA": ["en", "fr"],
-		"CH": ["de", "fr", "it", "rm"],
-		"CL": ["es"],
-		"CO": ["es", "en"],
-		"CR": ["es"],
-		"CZ": ["cs"],
-		"DE": ["de"],
-		"DK": ["dk", "nb", "sv"],
-		"EC": ["es"],
-		"EE": ["et"],
-		"ES": ["es", "ca"],
-		"FI": ["fi", "sv", "dk", "nb"],
-		"FR": ["fr"],
-		"GE": ["ka", "ab"],
-		"GEANT": [],
-		"GR": ["el"],
-		"HR": ["hr"],
-		"HU": ["hu"],
-		"IE": ["en"],
-		"IL": ["he"],
-		"IS": ["is", "dk", "nb", "sv"],
-		"IT": ["it"],
-		"JP": ["jp"],
-		"KE": ["sw", "en"],
-		"KR": ["ko"],
-		"LK": ["si", "ta"],
-		"LT": ["lt"],
-		"LU": ["fr", "de"],
-		"LV": ["lv"],
-		"MA": ["arb", "zgh"],
-		"MD": ["ro"],
-		"ME": ["cnr"],
-		"MK": ["mk", "sq"],
-		"MT": ["mt", "en"],
-		"MW": ["en", "ny"],
-		"MX": ["es"],
-		"MY": ["zsm", "en", "zh"],
-		"NG": ["nb"],
-		"NL": ["nl"],
-		"NO": ["nb", "dk", "sv"],
-		"NZ": ["en", "mi"],
-		"OM": ["arb"],
-		"PE": ["es"],
-		"PH": ["fil", "en"],
-		"PK": ["ur", "en"],
-		"PL": ["pl"],
-		"PT": ["pt"],
-		"RO": ["ro"],
-		"RS": ["rs"],
-		"SE": ["sv", "dk", "nb"],
-		"SG": ["en", "ms", "zh", "ta"],
-		"SI": ["sl"],
-		"SK": ["sk"],
-		"TR": ["tr"],
-		"UA": ["uk"],
-		"UG": ["en", "sw"],
-		"UK": ["en"],
-		"US": ["en", "es"],
-		"UY": ["es"],
-		"ZA": ["en", "af", "zu", "xh", "nso", "tn", "st", "ts", "ss", "ve", "nr"],
-		"ZM": ["en", "ny", "bem"],
-
-		"AE": [],
-		"KS": [],
-	}
-	if not country in d:
-		print("Country %s unknown" % country, file=sys.stderr)
-	return d[country] if country in d else []
 
 
 def getFirstCommonMember(list1: List[str], list2: List[str]) -> Optional[str]:
