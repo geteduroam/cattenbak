@@ -33,7 +33,7 @@ def getFirstCommonMember(list1: List[str], list2: List[str]) -> Optional[str]:
 
 
 def getLocalisedName(
-	names: List[str], preferredLanguage: str, country: str
+	names: List[str], country: str
 ) -> Optional[Dict[str, str]]:
 	# If returning a Dict, it MUST contain an "any" language
 	if len(names) == 0:
@@ -78,9 +78,9 @@ def checkInstitution(profile: Dict):
 	return not profile["name"] is None and not profile["country"] is None and profile["profiles"]
 
 
-def generateInstitution(instData: Dict[str, Any], lang: str):
+def generateInstitution(instData: Dict[str, Any]):
 	return {
-		"name": getLocalisedName(instData["names"], lang, instData["country"]),
+		"name": getLocalisedName(instData["names"], instData["country"]),
 		"country": instData["country"],
 		"geo": list(
 			map(lambda x: geoCompress(x), instData["geo"] if "geo" in instData else [])
@@ -91,7 +91,6 @@ def generateInstitution(instData: Dict[str, Any], lang: str):
 				map(
 					lambda x: generateProfile(
 						x,
-						lang,
 						instData["country"],
 					),
 					instData["profiles"],
@@ -101,7 +100,7 @@ def generateInstitution(instData: Dict[str, Any], lang: str):
 	}
 
 
-def generateProfile(catProfile: Dict, lang: str, country: str) -> Optional[Dict[str, str]]:
+def generateProfile(catProfile: Dict, country: str) -> Optional[Dict[str, str]]:
 	if catProfile["redirect"]:
 		redirect_url = urllib.parse.urlparse(catProfile["redirect"])
 		if not redirect_url.scheme == 'https' and not redirect_url.scheme == 'http':
@@ -110,21 +109,21 @@ def generateProfile(catProfile: Dict, lang: str, country: str) -> Optional[Dict[
 		if "letswifi" in frag:
 			return {
 				"id": "cat_profile_%s" % catProfile["id"],
-				"name": getLocalisedName(catProfile["names"], lang, country),
+				"name": getLocalisedName(catProfile["names"], country),
 				"type": "letswifi",
 				"letswifi_endpoint": redirect_url._replace(fragment="").geturl(),
 			}
 		else:
 			return {
 				"id": "cat_profile_%s" % catProfile["id"],
-				"name": getLocalisedName(catProfile["names"], lang, country),
+				"name": getLocalisedName(catProfile["names"], country),
 				"type": "webview",
 				"portal_endpoint": catProfile["redirect"],
 			}
 	else:
 		return {
 			"id": "cat_profile_%s" % catProfile["id"],
-			"name": getLocalisedName(catProfile["names"], lang, country),
+			"name": getLocalisedName(catProfile["names"], country),
 			"type": "eap-config",
 			"eapconfig_endpoint": "%s?action=downloadInstaller&device=eap-generic&profile=%s"
 			% (cat_api, catProfile["id"]),
@@ -140,12 +139,12 @@ def geoCompress(geo: Dict) -> Dict:
 	}
 
 
-def generateDiscovery(catData: Dict, lang: str):
+def generateDiscovery(catData: Dict):
 	return list(
 		filter(
 			lambda x: checkInstitution(x),
 			map(
-				lambda x: generateInstitution(x[1], lang) | {"id": "cat_idp_%s" % x[0]},
+				lambda x: generateInstitution(x[1]) | {"id": "cat_idp_%s" % x[0]},
 				filter(lambda x: "profiles" in x[1], catData.items()),
 			)
 		)
@@ -162,22 +161,14 @@ def parseArgs() -> Dict[str, str]:
 		default=None,
 		help="path where to write V2 discovery file to fileystem",
 	)
-	parser.add_argument(
-		"-l",
-		"--language",
-		nargs="?",
-		dest="lang",
-		default="any",
-		help="generate file for this language code",
-	)
 	return vars(parser.parse_args())
 
 
 if __name__ == "__main__":
 	args = parseArgs()
-	discovery = generateDiscovery(getProfilesFromCat(), args["lang"])
+	discovery = generateDiscovery(getProfilesFromCat())
 	file = (
-		"discovery-%s.json" % args["lang"]
+		"discovery.json"
 		if args["file_path"] == None
 		else args["file_path"]
 	)
