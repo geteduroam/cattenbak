@@ -37,14 +37,24 @@ def getLocalisedName(
 ) -> Optional[Dict[str, str]]:
 	# If returning a Dict, it MUST contain an "any" language
 
-	names = list(filter(lambda n: n["value"] and n["lang"], names))
 	if len(names) == 0:
 		return None
 	if len(names) == 1:
 		return {"any": names[0]["value"]}
+
+	names = list(filter(lambda n: n["value"], names))
+	if len(names) == 0:
+		return None
+	if len(names) == 1:
+		return {"any": names[0]["value"]}
+
 	languageDict = dict(map(lambda name: (name["lang"], name["value"]), names))
-	if "C" in languageDict.keys():
+	if "any" in languageDict.keys():
+		pass
+	elif "C" in languageDict.keys():
 		languageDict["any"] = languageDict.pop("C")
+	elif "" in languageDict.keys():
+		languageDict["any"] = languageDict.pop("")
 
 	countryLangs = getLanguagesForCountry(country)
 	nonEnglishCountryLangs = list(filter(lambda l: not l == "en", countryLangs))
@@ -82,16 +92,18 @@ def getLocalisedName(
 
 
 def checkProfile(profile: Dict):
-	return not profile["name"] is None and "any" in profile["name"].keys()
+	return not profile["name"] is None and ("any" in profile["name"].keys() or not profile["name"])
 
 
 def checkInstitution(profile: Dict):
 	return not profile["name"] is None and not profile["country"] is None and profile["profiles"]
 
 
-def generateInstitution(instData: Dict[str, Any]):
+def generateInstitution(instData: Dict[str, Any]) -> Dict[str,Any]:
+	name = getLocalisedName(instData["names"], instData["country"])
+
 	return {
-		"name": getLocalisedName(instData["names"], instData["country"]),
+		"name": name,
 		"country": instData["country"],
 		"geo": list(
 			map(lambda x: geoCompress(x), instData["geo"] if "geo" in instData else [])
@@ -100,9 +112,10 @@ def generateInstitution(instData: Dict[str, Any]):
 			filter(
 				lambda profile: not profile is None and checkProfile(profile),
 				map(
-					lambda x: generateProfile(
-						x,
+					lambda catProfile: generateProfile(
+						catProfile,
 						instData["country"],
+						name,
 					),
 					instData["profiles"],
 				),
@@ -111,7 +124,11 @@ def generateInstitution(instData: Dict[str, Any]):
 	}
 
 
-def generateProfile(catProfile: Dict, country: str) -> Optional[Dict[str, str]]:
+def generateProfile(catProfile: Dict, country: str, parentName: Dict[str,str]) -> Optional[Dict[str, str]]:
+	name = getLocalisedName(catProfile["names"], country)
+	if name == parentName or not name:
+		name = {}
+
 	if catProfile["redirect"]:
 		redirect_url = urllib.parse.urlparse(catProfile["redirect"])
 		if not redirect_url.scheme:
@@ -124,21 +141,21 @@ def generateProfile(catProfile: Dict, country: str) -> Optional[Dict[str, str]]:
 		if "letswifi" in frag:
 			return {
 				"id": "cat_profile_%s" % catProfile["id"],
-				"name": getLocalisedName(catProfile["names"], country),
+				"name": name,
 				"type": "letswifi",
 				"letswifi_endpoint": redirect_url._replace(fragment="").geturl(),
 			}
 		else:
 			return {
 				"id": "cat_profile_%s" % catProfile["id"],
-				"name": getLocalisedName(catProfile["names"], country),
+				"name": name,
 				"type": "webview",
 				"webview_endpoint": redirect_url.geturl(),
 			}
 	else:
 		return {
 			"id": "cat_profile_%s" % catProfile["id"],
-			"name": getLocalisedName(catProfile["names"], country),
+			"name": name,
 			"type": "eap-config",
 			"eapconfig_endpoint": "%s?action=downloadInstaller&device=eap-generic&profile=%s"
 			% (cat_api, catProfile["id"]),
