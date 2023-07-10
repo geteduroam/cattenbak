@@ -139,6 +139,9 @@ def generateProfile(catProfile: Dict, country: str, parentName: Dict[str,str]) -
 			return None
 		frag = redirect_url.fragment.split("&")
 		if "letswifi" in frag:
+			if redirect_url.query:
+				# We're not supporting this anymore!
+				return None
 			return {
 				"id": "cat_profile_%s" % catProfile["id"],
 				"name": name,
