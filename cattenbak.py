@@ -114,6 +114,10 @@ def generateInstitution(instData: Dict[str, Any]):
 def generateProfile(catProfile: Dict, country: str) -> Optional[Dict[str, str]]:
 	if catProfile["redirect"]:
 		redirect_url = urllib.parse.urlparse(catProfile["redirect"])
+		if not redirect_url.scheme:
+			# If we use the scheme variable in urlparse, it will set the hostname as path
+			# So we have to do this a bit more old fashioned
+			redirect_url = urllib.parse.urlparse("http://" + catProfile["redirect"])
 		if not redirect_url.scheme == 'https' and not redirect_url.scheme == 'http':
 			return None
 		frag = redirect_url.fragment.split("&")
