@@ -33,9 +33,11 @@ def getFirstCommonMember(list1: List[str], list2: List[str]) -> Optional[str]:
 
 
 def getLocalisedName(
-	names: List[str], country: str
+	names: List[Dict[str,str]], country: str
 ) -> Optional[Dict[str, str]]:
 	# If returning a Dict, it MUST contain an "any" language
+
+	names = list(filter(lambda n: n["value"] and n["lang"], names))
 	if len(names) == 0:
 		return None
 	if len(names) == 1:
