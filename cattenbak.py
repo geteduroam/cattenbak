@@ -92,11 +92,11 @@ def getLocalisedName(
 
 
 def checkProfile(profile: Dict):
-	return not profile["name"] is None and ("any" in profile["name"].keys() or not profile["name"])
+	return not profile is None # and not profile["name"] is None and ("any" in profile["name"].keys() or not profile["name"])
 
 
 def checkInstitution(profile: Dict):
-	return not profile["name"] is None and not profile["country"] is None and profile["profiles"]
+	return not profile["name"] is None and profile["profiles"] # and not profile["country"] is None
 
 
 def generateInstitution(instData: Dict[str, Any]) -> Dict[str,Any]:
@@ -110,7 +110,7 @@ def generateInstitution(instData: Dict[str, Any]) -> Dict[str,Any]:
 		),
 		"profiles": list(
 			filter(
-				lambda profile: not profile is None and checkProfile(profile),
+				lambda profile: checkProfile(profile),
 				map(
 					lambda catProfile: generateProfile(
 						catProfile,
@@ -174,9 +174,13 @@ def geoCompress(geo: Dict) -> Dict:
 def generateDiscovery(catData: Dict):
 	return list(
 		filter(
+			# Filter out generated institutions
 			lambda x: checkInstitution(x),
 			map(
+				# Generate our institution struct, and add an "id" so we can match it back to CAT
 				lambda x: generateInstitution(x[1]) | {"id": "cat_idp_%s" % x[0]},
+
+				# Filter out institutions without profiles, returned by the CAT API
 				filter(lambda x: "profiles" in x[1], catData.items()),
 			)
 		)
@@ -190,7 +194,7 @@ def parseArgs() -> Dict[str, str]:
 		nargs="?",
 		metavar="FILE",
 		dest="file_path",
-		default=None,
+		default="discovery.json",
 		help="path where to write V2 discovery file to fileystem",
 	)
 	return vars(parser.parse_args())
@@ -213,11 +217,7 @@ def seq(old_seq: int = None) -> str:
 if __name__ == "__main__":
 	args = parseArgs()
 	discovery = generateDiscovery(getProfilesFromCat())
-	file = (
-		"discovery.json"
-		if args["file_path"] == None
-		else args["file_path"]
-	)
+	file = args["file_path"]
 	with open(file, "w") as fh:
 		json.dump(
 			{
