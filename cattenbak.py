@@ -155,6 +155,7 @@ def generateInstitution(instData: Dict[str, Any], lang: str):
 		),
 		"profiles": list(
 			filter(
+				lambda profile: not profile is None and checkProfile(profile),
 				map(
 					lambda x: generateProfile(
 						x,
@@ -163,7 +164,6 @@ def generateInstitution(instData: Dict[str, Any], lang: str):
 					),
 					instData["profiles"],
 				),
-				lambda profile: checkProfile(profile)
 			)
 		),
 	}
