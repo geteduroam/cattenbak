@@ -113,37 +113,49 @@ def getFirstCommonMember(list1: List[str], list2: List[str]) -> Optional[str]:
 
 
 def getLocalisedName(
-	names: List, preferredLanguage: str, country: str
-) -> Optional[str]:
+	names: List[str], preferredLanguage: str, country: str
+) -> Optional[Dict[str, str]]:
+	# If returning a Dict, it MUST contain an "any" language
 	if len(names) == 0:
 		return None
-	lang: Dict[str, str] = {}
-	for name in names:
-		lang[name["lang"]] = name["value"]
-	if preferredLanguage in lang:
-		return lang[preferredLanguage]
-	elif "C" in lang:
-		return lang["C"]
-	elif "any" in lang:
-		return lang["any"]
-	elif (
-		countryLang := getFirstCommonMember(
-			getLanguagesForCountry(country), list(lang.keys())
-		)
-	) in lang:
-		return lang[countryLang]
-	elif "en" in lang:
-		return lang["en"]
-	else:
-		return names[0]["value"]
+	if len(names) == 1:
+		return {"any": names[0]["value"]}
+	languageDict = dict(map(lambda name: (name["lang"], name["value"]), names))
+	if "C" in languageDict.keys():
+		languageDict["any"] = languageDict.pop("C")
+
+	countryLangs = getLanguagesForCountry(country)
+	nonEnglishCountryLangs = list(filter(lambda l: not l == "en", countryLangs))
+	if nonEnglishCountryLangs and "en" in languageDict.keys() and "any" in languageDict.keys() and getFirstCommonMember(nonEnglishCountryLangs, languageDict.keys()) is None:
+		# Here someone has set multiple languages, at least "en" and "any",
+		# but they have not set a language that is local to their own country! Weird..
+		# This could be because CAT doesn't allow you to set any language
+		# that CAT itself is not translated in.  So it could be a way to put both languages anyway,
+		# but it's not correct.  It's far more likely that they meant to do this:
+		englishName = languageDict.pop("en")
+		localName = languageDict.pop("any")
+		languageDict["any"] = englishName
+		languageDict[nonEnglishCountryLangs[0]] = localName
+
+	if not "any" in languageDict.keys():
+		countryLangs.insert(0, "en")
+		countryLangs.append(names[0]["lang"]) # use the first language as "any"
+		for countryLang in countryLangs:
+			if countryLang in languageDict.keys():
+				languageDict["any"] = languageDict.pop(countryLang)
+				break # break out of the for loop, we found a good candidate for "any"
+		assert "any" in languageDict.keys()
+
+	# Remove duplicates, where "any" and other languages are the same
+	return {k: v for k, v in languageDict.items() if k == "any" or not v == languageDict["any"]}
 
 
 def checkProfile(profile: Dict):
-	return profile.name is not None and country is not None and profiles
+	return not profile["name"] is None and "any" in profile["name"].keys()
 
 
 def checkInstitution(profile: Dict):
-	return profile.name is not None and country is not None and profiles
+	return not profile["name"] is None and not profile["country"] is None and profile["profiles"]
 
 
 def generateInstitution(instData: Dict[str, Any], lang: str):
@@ -210,9 +222,12 @@ def geoCompress(geo: Dict) -> Dict:
 
 def generateDiscovery(catData: Dict, lang: str):
 	return list(
-		map(
-			lambda x: generateInstitution(x[1], lang) | {"id": "cat_idp_%s" % x[0]},
-			filter(lambda x: "profiles" in x[1], catData.items()),
+		filter(
+			lambda x: checkInstitution(x),
+			map(
+				lambda x: generateInstitution(x[1], lang) | {"id": "cat_idp_%s" % x[0]},
+				filter(lambda x: "profiles" in x[1], catData.items()),
+			)
 		)
 	)
 
