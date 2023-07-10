@@ -129,7 +129,7 @@ def generateProfile(catProfile: Dict, country: str) -> Optional[Dict[str, str]]:
 				"id": "cat_profile_%s" % catProfile["id"],
 				"name": getLocalisedName(catProfile["names"], country),
 				"type": "webview",
-				"portal_endpoint": catProfile["redirect"],
+				"webview_endpoint": redirect_url.geturl(),
 			}
 	else:
 		return {
