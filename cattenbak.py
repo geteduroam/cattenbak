@@ -119,7 +119,7 @@ def checkInstitution(institution: Dict):
 	return not institution["name"] is None and institution["profiles"] # and not institution["country"] is None
 
 
-def generateInstitution(instData: Dict[str, Any]) -> Dict[str,Any]:
+def generateInstitution(instData: Dict[str, Any], letswifi_stub: Optional[str] = None) -> Dict[str,Any]:
 	name = getLocalisedName(instData["names"], instData["country"])
 
 	return {
@@ -133,9 +133,10 @@ def generateInstitution(instData: Dict[str, Any]) -> Dict[str,Any]:
 				lambda profile: checkProfile(profile),
 				map(
 					lambda catProfile: generateProfile(
-						catProfile,
-						instData["country"],
-						name,
+						catProfile=catProfile,
+						country=instData["country"],
+						parentName=name,
+						letswifi_stub=letswifi_stub,
 					),
 					instData["profiles"],
 				),
@@ -144,10 +145,14 @@ def generateInstitution(instData: Dict[str, Any]) -> Dict[str,Any]:
 	}
 
 
-def generateProfile(catProfile: Dict, country: str, parentName: Dict[str,str]) -> Optional[Dict[str, str]]:
+def generateProfile(catProfile: Dict, country: str, parentName: Dict[str,str] = None, letswifi_stub: Optional[str] = None) -> Optional[Dict[str, str]]:
 	name = getLocalisedName(catProfile["names"], country)
 	if name == parentName or not name:
 		name = {}
+	if letswifi_stub is None:
+		letswifi_stub = ""
+	if letswifi_stub and letswifi_stub[-1] != "/":
+		letswifi_stub = letswifi_stub + "/"
 
 	if catProfile["redirect"]:
 		redirect_url = urllib.parse.urlparse(catProfile["redirect"])
@@ -159,14 +164,20 @@ def generateProfile(catProfile: Dict, country: str, parentName: Dict[str,str]) -
 			return None
 		frag = redirect_url.fragment.split("&")
 		if "letswifi" in frag:
+			if not redirect_url.scheme == 'https':
+				# We only support HTTPS!
+				return None
 			if redirect_url.query:
 				# We're not supporting this anymore!
 				return None
+			endpoint = redirect_url._replace(fragment="").geturl()
+			if letswifi_stub:
+				endpoint = letswifi_stub + endpoint[8:]
 			return {
 				"id": "cat_profile_%s" % catProfile["id"],
 				"name": name,
 				"type": "letswifi",
-				"letswifi_endpoint": redirect_url._replace(fragment="").geturl(),
+				"letswifi_endpoint": endpoint,
 			}
 		else:
 			return {
@@ -194,7 +205,7 @@ def geoCompress(geo: Dict) -> Dict:
 	}
 
 
-def generateDiscovery(catData: Dict):
+def generateDiscovery(catData: Dict, letswifi_stub: Optional[str]):
 	return list(
 		map(
 			# We add the CAT ID behind every profile name if there are duplicate profile names
@@ -205,7 +216,7 @@ def generateDiscovery(catData: Dict):
 				lambda institution: checkInstitution(institution),
 				map(
 					# Generate our institution struct, and add an "id" so we can match it back to CAT
-					lambda x: generateInstitution(x[1]) | {"id": "cat_idp_%s" % x[0]},
+					lambda x: generateInstitution(x[1], letswifi_stub=letswifi_stub) | {"id": "cat_idp_%s" % x[0]},
 
 					# Filter out institutions without profiles, returned by the CAT API
 					filter(lambda x: "profiles" in x[1], catData.items()),
@@ -224,6 +235,14 @@ def parseArgs() -> Dict[str, str]:
 		dest="file_path",
 		default="discovery.json",
 		help="path where to write V2 discovery file to fileystem",
+	)
+	parser.add_argument(
+		"--letswifi-stub",
+		nargs="?",
+		metavar="URL",
+		dest="letswifi_stub",
+		default=None,
+		help="url prefix to put in front of the actual letswifi url"
 	)
 	return vars(parser.parse_args())
 
@@ -244,8 +263,8 @@ def seq(old_seq: int = None) -> str:
 
 if __name__ == "__main__":
 	args = parseArgs()
-	discovery = generateDiscovery(getProfilesFromCat())
 	file = args["file_path"]
+	discovery = generateDiscovery(getProfilesFromCat(), letswifi_stub=args["letswifi_stub"])
 	with open(file, "w") as fh:
 		json.dump(
 			{
