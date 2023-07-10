@@ -164,6 +164,20 @@ def parseArgs() -> Dict[str, str]:
 	return vars(parser.parse_args())
 
 
+def seq(old_seq: int = None) -> str:
+	candidate_seq = int(datetime.datetime.utcnow().strftime("%Y%m%d00"))
+	if old_seq is None:
+		# Use a high number so we have a better chance to be over
+		# Let's hope this doesn't happen more than once a day ;)
+		seq = candidate_seq + 80
+	elif candidate_seq <= old_seq:
+		seq = old_seq + 1
+	else:
+		seq = candidate_seq
+
+	return seq
+
+
 if __name__ == "__main__":
 	args = parseArgs()
 	discovery = generateDiscovery(getProfilesFromCat())
@@ -174,12 +188,18 @@ if __name__ == "__main__":
 	)
 	with open(file, "w") as fh:
 		json.dump(
-			discovery,
+			{
+				"http://discovery.eduroam.app#v2": {
+					"seq": seq(None),
+					"instances": discovery,
+					"apps": {},
+				}
+			},
 			fh,
-			separators=(",", ":"),
+			separators=(",", ":"), # remove frivulous space
 			allow_nan=False,
-			sort_keys=True,
-			ensure_ascii=True,
+			sort_keys=True, # reproducable output
+			ensure_ascii=True, # compresses better
 			check_circular=False,
 		)
 		fh.write("\r\n")
