@@ -221,7 +221,7 @@ if __name__ == "__main__":
 	with open(file, "w") as fh:
 		json.dump(
 			{
-				"http://discovery.eduroam.app#v2": {
+				"http://letswifi.app/discovery#v2": {
 					"seq": seq(None),
 					"instances": discovery,
 					"apps": {},
