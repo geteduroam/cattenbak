@@ -91,12 +91,32 @@ def getLocalisedName(
 	return {k: v for k, v in languageDict.items() if k == "any" or not v == languageDict["any"]}
 
 
+def hasDuplicateNames(institution: Dict):
+	for profile1 in institution["profiles"]:
+		for profile2 in institution["profiles"]:
+			if not profile1 == profile2 and not getFirstCommonMember(profile1["name"].values(), profile2["name"].values()) is None:
+				return True
+	return False
+
+
+def handleDuplicateNames(institution: Dict):
+	result = institution | {"profiles": list(map(
+		lambda profile: profile | {"name": addIdToNames(profile["name"], profile["id"][12:]) if profile["id"][:12] == "cat_profile_" else profile["name"]},
+		institution["profiles"],
+		))}
+	return result
+
+
+def addIdToNames(names: Dict, id: str):
+	return {k: v + " (#" + id + ")" for k, v in names.items()}
+
+
 def checkProfile(profile: Dict):
 	return not profile is None # and not profile["name"] is None and ("any" in profile["name"].keys() or not profile["name"])
 
 
-def checkInstitution(profile: Dict):
-	return not profile["name"] is None and profile["profiles"] # and not profile["country"] is None
+def checkInstitution(institution: Dict):
+	return not institution["name"] is None and institution["profiles"] # and not institution["country"] is None
 
 
 def generateInstitution(instData: Dict[str, Any]) -> Dict[str,Any]:
@@ -176,15 +196,20 @@ def geoCompress(geo: Dict) -> Dict:
 
 def generateDiscovery(catData: Dict):
 	return list(
-		filter(
-			# Filter out generated institutions
-			lambda x: checkInstitution(x),
-			map(
-				# Generate our institution struct, and add an "id" so we can match it back to CAT
-				lambda x: generateInstitution(x[1]) | {"id": "cat_idp_%s" % x[0]},
+		map(
+			# We add the CAT ID behind every profile name if there are duplicate profile names
+			# This also applies to the profiles within the institution that are not duplicate
+			lambda institution: handleDuplicateNames(institution) if hasDuplicateNames(institution) else institution,
+			filter(
+				# Filter out generated institutions
+				lambda institution: checkInstitution(institution),
+				map(
+					# Generate our institution struct, and add an "id" so we can match it back to CAT
+					lambda x: generateInstitution(x[1]) | {"id": "cat_idp_%s" % x[0]},
 
-				# Filter out institutions without profiles, returned by the CAT API
-				filter(lambda x: "profiles" in x[1], catData.items()),
+					# Filter out institutions without profiles, returned by the CAT API
+					filter(lambda x: "profiles" in x[1], catData.items()),
+				)
 			)
 		)
 	)
