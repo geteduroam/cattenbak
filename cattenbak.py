@@ -94,6 +94,8 @@ def getLocalisedName(
 def hasDuplicateNames(institution: Dict):
 	for profile1 in institution["profiles"]:
 		for profile2 in institution["profiles"]:
+			if not profile1 == profile2 and profile1["name"] == profile2["name"]:
+				return True
 			if not profile1 == profile2 and not getFirstCommonMember(profile1["name"].values(), profile2["name"].values()) is None:
 				return True
 	return False
@@ -101,14 +103,18 @@ def hasDuplicateNames(institution: Dict):
 
 def handleDuplicateNames(institution: Dict):
 	result = institution | {"profiles": list(map(
-		lambda profile: profile | {"name": addIdToNames(profile["name"], profile["id"][12:]) if profile["id"][:12] == "cat_profile_" else profile["name"]},
+		lambda profile: profile | {
+			"name": None if not profile["id"][:12] == "cat_profile_" else addIdToNames(
+				profile["name"] if profile["name"] else institution["name"],
+				"#" + profile["id"][12:])
+		},
 		institution["profiles"],
 		))}
 	return result
 
 
 def addIdToNames(names: Dict, id: str):
-	return {k: v + " (#" + id + ")" for k, v in names.items()}
+	return {k: v + " (" + id + ")" for k, v in names.items()}
 
 
 def checkProfile(profile: Dict):
