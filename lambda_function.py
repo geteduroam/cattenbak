@@ -11,23 +11,15 @@ from typing import Optional, List, Any, Dict, Set, Union
 
 def lambda_handler(event, context) -> str:
 	s3 = boto3.client("s3")
+	cattenbak = Cattenbak(letswifi_stub=args["letswifi_stub"])
+
 	old_discovery = download_s3(s3, os.environ["s3_bucket"], os.environ["s3_read_path"])
-	if isinstance(old_discovery, Dict):
-		old_seq = (
-			old_discovery["seq"] if isinstance(old_discovery["seq"], int) else None
-		)
+	new_discovery = cattenbak.generateDiscovery()
+	if seq := cattenbak.discoveryIsUpToDate(old_discovery, new_discovery):
+		result = "Refresh not needed at seq %s\r\n" % (seq)
 	else:
-		old_discovery = None
-		old_seq = None
-
-	discovery = generate(old_seq=old_seq)
-	assert isinstance(discovery, Dict)
-
-	if old_seq is None or discovery_needs_refresh(old_discovery, discovery):
 		upload_s3(s3, discovery, os.environ["s3_bucket"], os.environ["s3_write_path"])
 		result = "Uploaded discovery seq %s" % discovery["seq"]
-	else:
-		result = "Unchanged %d" % old_seq
 
 	print(result)  # Goes to CloudWatch
 	return result  # Goes to Lambda UI when testing
