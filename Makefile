@@ -4,14 +4,18 @@ S3_URL := s3://geteduroam-disco/v1-test/discovery.json
 LAMBDA_FUNCTION := cattenbak
 
 
-cattenbak/cattenbak.py: cattenbak cattenbak.py
+cattenbak/cattenbak.py: cattenbak/i18n.py cattenbak cattenbak.py
 	cp cattenbak.py cattenbak/
+
+
+cattenbak/i18n.py: i18n.py cattenbak
+	cp i18n.py cattenbak/
 
 
 cattenbak: requirements.txt
 	rm -rf cattenbak
 	pip3 install -r requirements.txt -t ./cattenbak/
-	touch cattenbak
+	touch -c cattenbak
 
 
 cattenbak.zip: lambda_function.py cattenbak/cattenbak.py
