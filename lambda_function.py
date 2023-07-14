@@ -13,7 +13,11 @@ def lambda_handler(event, context) -> str:
 	)
 
 	old_discovery = download_s3(s3, os.environ["s3_bucket"], os.environ["s3_read_path"])
-	new_discovery = cattenbak.generateDiscovery()
+	try:
+		old_seq = old_discovery[sigil]["seq"]
+	except:
+		old_seq = None
+	new_discovery = cattenbak.generateDiscovery(old_seq=old_seq)
 	if seq := cattenbak.discoveryIsUpToDate(old_discovery, new_discovery):
 		result = "Refresh not needed at seq %s\r\n" % (seq)
 	else:
