@@ -40,7 +40,7 @@ def getFirstCommonMember(list1: List[str], list2: List[str]) -> Optional[str]:
 
 
 class Cattenbak:
-	def __init__(self, letswifi_stub: str=None):
+	def __init__(self, letswifi_stub: str=None, stubless_hosts: List[str]=[]):
 		self.letswifi_stub = ""
 		if letswifi_stub is None:
 			self.letswifi_stub = ""
@@ -52,6 +52,8 @@ class Cattenbak:
 			self.letswifi_stub = letswifi_stub + "/"
 		else:
 			self.letswifi_stub = letswifi_stub
+
+		self.stubless_hosts = stubless_hosts
 
 
 	def getLocalisedName(
@@ -197,7 +199,19 @@ class Cattenbak:
 					return None
 				endpoint = redirect_url._replace(fragment="").geturl()
 				if self.letswifi_stub:
-					endpoint = self.letswifi_stub + endpoint[8:]
+					use_stub = True
+					for stubless_host in self.stubless_hosts:
+						stubless_host = stubless_host
+						if stubless_host[0] == ".":
+							if redirect_url.hostname.endswith(stubless_host):
+								use_stub = False
+								break
+						else:
+							if redirect_url.hostname == stubless_host:
+								use_stub = False
+								break
+					if use_stub:
+						endpoint = self.letswifi_stub + endpoint[8:]
 				return {
 					"id": "cat_profile_%s" % catProfile["id"],
 					"name": name,
@@ -315,13 +329,25 @@ def parseArgs() -> Dict[str, str]:
 		default=None,
 		help="url prefix to put in front of the actual letswifi url"
 	)
+	parser.add_argument(
+		"--stubless-host",
+		action="extend",
+		nargs="+",
+		type=str,
+		metavar="HOST",
+		dest="stubless_host",
+		help="hostname that won't get prefixed with the stub"
+	)
 	return vars(parser.parse_args())
 
 
 if __name__ == "__main__":
 	args = parseArgs()
 	file = args["file_path"]
-	cattenbak = Cattenbak(letswifi_stub=args["letswifi_stub"])
+	cattenbak = Cattenbak(
+		letswifi_stub=args["letswifi_stub"],
+		stubless_hosts=args["stubless_host"]
+	)
 	old_discovery = {}
 	try:
 		with open(file, "r") as f:
