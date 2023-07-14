@@ -9,6 +9,7 @@ from typing import Optional, List, Any, Dict, Set
 from i18n import getLanguagesForCountry
 
 cat_api = "https://cat.eduroam.org/user/API.php"
+user_agent = "geteduroam-cattenbak/2.0.0"
 
 
 def getProfilesFromCat() -> Dict:
@@ -16,7 +17,10 @@ def getProfilesFromCat() -> Dict:
 	instances: List[Any] = []
 
 	r_List_everything = requests.get(
-		cat_api + "?action=listIdentityProvidersWithProfiles"
+		cat_api + "?action=listIdentityProvidersWithProfiles",
+		headers={'user-agent': user_agent},
+		allow_redirects=False,
+		timeout=3,
 	)
 	data = r_List_everything.json()
 	assert "status" in data
