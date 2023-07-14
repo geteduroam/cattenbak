@@ -24,7 +24,7 @@ cattenbak.zip: lambda_function.py cattenbak/cattenbak.py
 
 
 discovery.json: cattenbak/cattenbak.py
-	curl --compressed -sSLO https://discovery.eduroam.app/v1/discovery.json || true
+	curl --compressed -sSLO https://discovery.eduroam.app/v2/discovery.json || true
 	cattenbak/cattenbak.py --file-path discovery.json
 
 
