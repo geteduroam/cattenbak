@@ -110,7 +110,8 @@ def handleDuplicateNames(institution: Dict):
 		lambda profile: profile | {
 			"name": None if not profile["id"][:12] == "cat_profile_" else addIdToNames(
 				profile["name"] if profile["name"] else institution["name"],
-				"#" + profile["id"][12:])
+				"#" + profile["id"][12:]
+			)
 		},
 		institution["profiles"],
 		))}
@@ -215,7 +216,7 @@ def geoCompress(geo: Dict) -> Dict:
 	}
 
 
-def generateDiscovery(catData: Dict, letswifi_stub: Optional[str]):
+def generateInstituteList(catData: Dict, letswifi_stub: Optional[str]):
 	return list(
 		map(
 			# We add the CAT ID behind every profile name if there are duplicate profile names
@@ -234,6 +235,17 @@ def generateDiscovery(catData: Dict, letswifi_stub: Optional[str]):
 			)
 		)
 	)
+
+
+def generateDiscovery(old_seq=None) -> Dict:
+	institutions = generateInstituteList(getProfilesFromCat(), letswifi_stub=args["letswifi_stub"])
+	return {
+		"http://letswifi.app/discovery#v2": {
+			"seq": seq(old_seq),
+			"institutions": institutions,
+			"apps": {},
+		}
+	}
 
 
 def parseArgs() -> Dict[str, str]:
@@ -274,16 +286,9 @@ def seq(old_seq: int = None) -> str:
 if __name__ == "__main__":
 	args = parseArgs()
 	file = args["file_path"]
-	discovery = generateDiscovery(getProfilesFromCat(), letswifi_stub=args["letswifi_stub"])
 	with open(file, "w") as fh:
 		json.dump(
-			{
-				"http://letswifi.app/discovery#v2": {
-					"seq": seq(None),
-					"instances": discovery,
-					"apps": {},
-				}
-			},
+			generateDiscovery(),
 			fh,
 			separators=(",", ":"), # remove frivulous space
 			allow_nan=False,
