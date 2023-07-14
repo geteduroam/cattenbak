@@ -15,6 +15,7 @@ cattenbak/i18n.py: i18n.py cattenbak
 cattenbak: requirements.txt
 	rm -rf cattenbak
 	pip3 install -r requirements.txt -t ./cattenbak/
+	find ./cattenbak/ -name \*.so -delete
 	touch -c cattenbak
 
 
