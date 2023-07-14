@@ -10,6 +10,7 @@ from i18n import getLanguagesForCountry
 
 cat_api = "https://cat.eduroam.org/user/API.php"
 user_agent = "geteduroam-cattenbak/2.0.0"
+sigil = "http://letswifi.app/discovery#v2"
 
 
 def getProfilesFromCat() -> Dict:
@@ -238,14 +239,48 @@ def generateInstituteList(catData: Dict, letswifi_stub: Optional[str]):
 
 
 def generateDiscovery(old_seq=None) -> Dict:
-	institutions = generateInstituteList(getProfilesFromCat(), letswifi_stub=args["letswifi_stub"])
+	def seq(old_seq: int = None) -> str:
+		candidate_seq = int(datetime.datetime.utcnow().strftime("%Y%m%d00"))
+		if old_seq is None:
+			# Use a high number so we have a better chance to be over
+			# Let's hope this doesn't happen more than once a day ;)
+			seq = candidate_seq + 80
+		elif candidate_seq <= old_seq:
+			seq = old_seq + 1
+		else:
+			seq = candidate_seq
+
+		return seq
+
+	institutions = generateInstituteList(getProfilesFromCat())
 	return {
-		"http://letswifi.app/discovery#v2": {
+		sigil: {
 			"seq": seq(old_seq),
 			"institutions": institutions,
 			"apps": {},
 		}
 	}
+
+
+def discoveryIsUpToDate(old_discovery: Optional[Dict], new_discovery: Dict) -> Optional[int]:
+	if old_discovery is None:
+		return None
+	if not sigil in old_discovery:
+		return None
+
+	old_discovery = old_discovery[sigil]
+	new_discovery = new_discovery[sigil]
+
+	old_institutions = old_discovery["institutions"] if "institutions" in old_discovery else None
+	new_institutions = new_discovery["institutions"] if "institutions" in new_discovery else None
+
+	assert isinstance(new_institutions, List)
+	if not isinstance(old_institutions, List) or old_institutions is None or new_institutions is None:
+		return None
+
+	if old_institutions == new_institutions:
+		return old_discovery["seq"]
+	return None
 
 
 def parseArgs() -> Dict[str, str]:
@@ -269,31 +304,28 @@ def parseArgs() -> Dict[str, str]:
 	return vars(parser.parse_args())
 
 
-def seq(old_seq: int = None) -> str:
-	candidate_seq = int(datetime.datetime.utcnow().strftime("%Y%m%d00"))
-	if old_seq is None:
-		# Use a high number so we have a better chance to be over
-		# Let's hope this doesn't happen more than once a day ;)
-		seq = candidate_seq + 80
-	elif candidate_seq <= old_seq:
-		seq = old_seq + 1
-	else:
-		seq = candidate_seq
-
-	return seq
-
-
 if __name__ == "__main__":
 	args = parseArgs()
 	file = args["file_path"]
-	with open(file, "w") as fh:
-		json.dump(
-			generateDiscovery(),
-			fh,
-			separators=(",", ":"), # remove frivulous space
-			allow_nan=False,
-			sort_keys=True, # reproducable output
-			ensure_ascii=True, # compresses better
-			check_circular=False,
-		)
-		fh.write("\r\n")
+	old_discovery = {}
+	try:
+		with open(file, "r") as f:
+			old_discovery = json.load(f)
+			new_discovery = generateDiscovery(old_seq=old_discovery[sigil]["seq"])
+	except:
+		print("Cannot read old discovery\r\n", file=sys.stderr)
+		new_discovery = generateDiscovery()
+	if seq := discoveryIsUpToDate(old_discovery, new_discovery):
+		print("Refresh not needed at seq %s\r\n" % (seq), file=sys.stderr)
+	else:
+		with open(file, "w") as fh:
+			json.dump(
+				new_discovery,
+				fh,
+				separators=(",", ":"), # remove frivulous space
+				allow_nan=False,
+				sort_keys=True, # reproducable output
+				ensure_ascii=True, # compresses better
+				check_circular=False,
+			)
+			fh.write("\r\n")
