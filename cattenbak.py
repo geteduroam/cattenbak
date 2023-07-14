@@ -6,7 +6,7 @@ import argparse
 import urllib.parse
 import sys
 from typing import Optional, List, Any, Dict, Set
-from i18n import getLanguagesForCountry
+from i18n import getLanguagesForCountry, convertCatCountryToIsoCountry
 
 cat_api = "https://cat.eduroam.org/user/API.php"
 user_agent = "geteduroam-cattenbak/2.0.0"
@@ -152,11 +152,12 @@ class Cattenbak:
 
 
 	def generateInstitution(self, instData: Dict[str, Any]) -> Dict[str,Any]:
-		name = self.getLocalisedName(instData["names"], instData["country"])
+		country = convertCatCountryToIsoCountry(instData["country"])
+		name = self.getLocalisedName(instData["names"], convertCatCountryToIsoCountry(country))
 
 		return {
 			"name": name,
-			"country": instData["country"],
+			"country": convertCatCountryToIsoCountry(country),
 			"geo": list(
 				map(lambda x: self.geoCompress(x), instData["geo"] if "geo" in instData else [])
 			),
@@ -166,7 +167,7 @@ class Cattenbak:
 					map(
 						lambda catProfile: self.generateProfile(
 							catProfile=catProfile,
-							country=instData["country"],
+							country=convertCatCountryToIsoCountry(country),
 							parentName=name
 						),
 						instData["profiles"],

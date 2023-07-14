@@ -1,5 +1,18 @@
 from typing import List, Dict
 
+
+def convertCatCountryToIsoCountry(country: str) -> str:
+	# GEANT is its own country in CAT (used by IdP #796 and #797),
+	# but these are named "guest IdP" and "guest IdP Android"
+	# The actual "GÉANT Staff" profile has an NL country code,
+	# so let's also convert those other GEANT profiles to NL
+	if country == 'GEANT':
+		return 'NL'
+
+	# Otherwise use same country code as CAT
+	return country
+
+
 def getLanguagesForCountry(country: str) -> List[str]:
 	d: Dict[str, List[str]] = {
 		"AE": ["arb", "afb"],
@@ -26,7 +39,6 @@ def getLanguagesForCountry(country: str) -> List[str]:
 		"FI": ["fi", "sv", "dk", "nb"],
 		"FR": ["fr"],
 		"GE": ["ka", "ab"],
-		"GEANT": [],
 		"GR": ["el"],
 		"HR": ["hr"],
 		"HU": ["hu"],
@@ -37,6 +49,7 @@ def getLanguagesForCountry(country: str) -> List[str]:
 		"JP": ["jp"],
 		"KE": ["sw", "en"],
 		"KR": ["ko"],
+		"KS": ["sq", "sr"], # Kosovo according to KREN (Kosovo NREN)
 		"LA": ["lo"],
 		"LK": ["si", "ta"],
 		"LT": ["lt"],
@@ -72,12 +85,9 @@ def getLanguagesForCountry(country: str) -> List[str]:
 		"UK": ["en"],
 		"US": ["en", "es"],
 		"UY": ["es"],
+		"XK": ["sq", "sr"], # Kosovo according to ISO rules (X means temporary)
 		"ZA": ["en", "af", "zu", "xh", "nso", "tn", "st", "ts", "ss", "ve", "nr"],
 		"ZM": ["en", "ny", "bem"],
-
-		# Kosovo, not in ISO 3166-2; should be XK according to https://en.wikipedia.org/wiki/XK_(user_assigned_code)
-		"KS": ["sq", "sr"], # according to CAT
-		"XK": ["sq", "sr"], # according to ISO
 	}
 	if not country in d:
 		print("Country %s unknown" % country, file=sys.stderr)
