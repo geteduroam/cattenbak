@@ -8,8 +8,12 @@ from typing import Optional, List, Any, Dict, Set, Union
 
 def lambda_handler(event, context) -> str:
 	s3 = boto3.client("s3")
+	stubless_hosts = []
+	if "s3_stubless_hosts_read_path" in os.environ:
+		stubless_hosts = json.loads(download_s3(s3, os.environ["s3_bucket"], os.environ["s3_stubless_hosts_read_path"]))
 	cattenbak = Cattenbak(
-		letswifi_stub=os.environ["letswifi_stub"] if "letswifi_stub" in os.environ else None
+		letswifi_stub=os.environ["letswifi_stub"] if "letswifi_stub" in os.environ else None,
+		stubless_hosts=stubless_hosts,
 	)
 
 	old_discovery = download_s3(s3, os.environ["s3_bucket"], os.environ["s3_read_path"])
@@ -70,7 +74,13 @@ def download_s3(
 		return None
 
 	try:
-		return json.loads(gzip.decompress(response["Body"].read()).decode("utf-8"))
+		compressed = False
+		if "ContentEncoding" in response:
+			if response["ContentEncoding"] == "gzip":
+				compressed = True
+			else:
+				raise Exception("Unknown ContentEncoding: " + response["ContentEncoding"])
+		return json.loads(gzip.decompress(response["Body"].read()).decode("utf-8")) if compressed else response["Body"].read().decode("utf-8")
 	except json.decoder.JSONDecodeError as e:
 		print(e)
 		return None
