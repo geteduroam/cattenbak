@@ -53,7 +53,7 @@ class Cattenbak:
 		else:
 			self.letswifi_stub = letswifi_stub
 
-		self.stubless_hosts = stubless_hosts
+		self.stubless_hosts = [] if stubless_hosts is None else stubless_hosts
 
 
 	def getLocalisedName(
