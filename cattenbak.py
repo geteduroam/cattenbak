@@ -127,15 +127,19 @@ class Cattenbak:
 
 
 	def handleDuplicateNames(self, institution: Dict):
-		result = institution | {"profiles": list(map(
-			lambda profile: profile | {
-				"name": None if not profile["id"][:12] == "cat_profile_" else self.addIdToNames(
-					profile["name"] if profile["name"] else institution["name"],
-					"#" + profile["id"][12:]
-				)
-			},
-			institution["profiles"],
-			))}
+		result = dict(
+			institution,
+			profiles=list(map(
+				lambda profile: dict(
+					profile,
+					name=None if not profile["id"][:12] == "cat_profile_" else self.addIdToNames(
+						profile["name"] if profile["name"] else institution["name"],
+						"#" + profile["id"][12:]
+					),
+				),
+				institution["profiles"],
+			))
+		)
 		return result
 
 
@@ -246,7 +250,7 @@ class Cattenbak:
 		}
 
 
-	def generateInstituteList(self, catData: Dict):
+	def generateInstituteList(self, catData: Dict) -> List:
 		return list(
 			map(
 				# We add the CAT ID behind every profile name if there are duplicate profile names
@@ -257,7 +261,7 @@ class Cattenbak:
 					lambda institution: self.checkInstitution(institution),
 					map(
 						# Generate our institution struct, and add an "id" so we can match it back to CAT
-						lambda x: self.generateInstitution(x[1]) | {"id": "cat_idp_%s" % x[0]},
+						lambda x: dict(self.generateInstitution(x[1]), id="cat_idp_%s" % x[0]),
 
 						# Filter out institutions without profiles, returned by the CAT API
 						filter(lambda x: "profiles" in x[1], catData.items()),
