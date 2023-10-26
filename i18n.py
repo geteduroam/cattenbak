@@ -36,6 +36,7 @@ def getLanguagesForCountry(country: str) -> List[str]:
 		"EC": ["es"],
 		"EE": ["et"],
 		"ES": ["es", "ca"],
+		"ET": ["aa", "am", "om", "so", "ti"],
 		"FI": ["fi", "sv", "dk", "nb"],
 		"FR": ["fr"],
 		"GE": ["ka", "ab"],
@@ -90,5 +91,5 @@ def getLanguagesForCountry(country: str) -> List[str]:
 		"ZM": ["en", "ny", "bem"],
 	}
 	if not country in d:
-		print("Country %s unknown" % country, file=sys.stderr)
+		raise Exception("Country %s unknown" % country)
 	return d[country] if country in d else []
