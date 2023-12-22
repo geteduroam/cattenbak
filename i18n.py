@@ -52,6 +52,7 @@ def getLanguagesForCountry(country: str) -> List[str]:
 		"KR": ["ko"],
 		"KS": ["sq", "sr"], # Kosovo according to KREN (Kosovo NREN)
 		"LA": ["lo"],
+		"LI": ["de"],
 		"LK": ["si", "ta"],
 		"LT": ["lt"],
 		"LU": ["fr", "de"],
