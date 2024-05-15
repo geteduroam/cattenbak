@@ -41,6 +41,7 @@ def getLanguagesForCountry(country: str) -> List[str]:
 		"FR": ["fr"],
 		"GE": ["ka", "ab"],
 		"GR": ["el"],
+		"GH": ["en", "asan1239", "dag", "ee", "gaa"],
 		"HR": ["hr"],
 		"HU": ["hu"],
 		"IE": ["en"],
