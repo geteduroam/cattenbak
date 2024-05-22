@@ -83,6 +83,7 @@ def getLanguagesForCountry(country: str) -> List[str]:
 		"SI": ["sl"],
 		"SK": ["sk"],
 		"TR": ["tr"],
+		"TZ": ["sw", "en"],
 		"UA": ["uk"],
 		"UG": ["en", "sw"],
 		"UK": ["en"],
