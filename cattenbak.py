@@ -374,7 +374,7 @@ class Cattenbak:
 			else self.getLocalisedNameNewStyle(catProfile["names"], country)
 		)
 		if name == parentName or not name:
-			name = {}
+			name = {} if old else []
 
 		if catProfile["redirect"]:
 			redirect_url = urllib.parse.urlparse(catProfile["redirect"])
