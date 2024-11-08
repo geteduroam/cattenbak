@@ -21,6 +21,7 @@ def getLanguagesForCountry(country: str) -> List[str]:
 		"AR": ["es"],
 		"AT": ["de", "sl"],
 		"AU": ["en"],
+		"AZ": ["az"],
 		"BD": ["bn"],
 		"BE": ["nl", "fr"],
 		"BG": ["bg"],
