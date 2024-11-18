@@ -11,7 +11,8 @@ from i18n import getLanguagesForCountry, convertCatCountryToIsoCountry
 
 cat_api = "https://cat.eduroam.org/user/API.php"
 user_agent = "geteduroam-cattenbak/2.0.0"
-sigil = "http://letswifi.app/discovery#v2"
+sigil_v2 = "http://letswifi.app/discovery#v2"
+sigil_v3 = "http://letswifi.app/discovery#v3"
 
 
 def getProfilesFromCat() -> Dict:
@@ -41,20 +42,24 @@ def getFirstCommonMember(list1: List[str], list2: List[str]) -> Optional[str]:
 
 
 class Cattenbak:
-	def __init__(self, letswifi_stub: str = None, stubless_hosts: List[str] = []):
-		self.letswifi_stub = ""
-		if letswifi_stub is None:
-			self.letswifi_stub = ""
-		if letswifi_stub:
-			stub_url = urllib.parse.urlparse(letswifi_stub)
+	def __init__(
+		self, legacy_stub: str = None, legacy_provider_hosts: List[str] = [""]
+	):
+		self.legacy_stub = ""
+		if legacy_stub is None:
+			self.legacy_stub = ""
+		if legacy_stub:
+			stub_url = urllib.parse.urlparse(legacy_stub)
 			if not stub_url.scheme == "https":
-				raise ValueError("letswifi_stub must be an https:// URL prefix")
-		if letswifi_stub and letswifi_stub[-1] != "/":
-			self.letswifi_stub = letswifi_stub + "/"
+				raise ValueError("legacy_stub must be an https:// URL prefix")
+		if legacy_stub and legacy_stub[-1] != "/":
+			self.legacy_stub = legacy_stub + "/"
 		else:
-			self.letswifi_stub = letswifi_stub
+			self.legacy_stub = legacy_stub
 
-		self.stubless_hosts = [] if stubless_hosts is None else stubless_hosts
+		self.legacy_provider_hosts = (
+			[""] if legacy_provider_hosts is None else legacy_provider_hosts
+		)
 
 	def getLocalisedNameNewStyle(
 		self, names: List[Dict[str, str]], country: str
@@ -381,7 +386,9 @@ class Cattenbak:
 			if not redirect_url.scheme:
 				# If we use the scheme variable in urlparse, it will set the hostname as path
 				# So we have to do this a bit more old fashioned
-				redirect_url = urllib.parse.urlparse("http://" + catProfile["redirect"].strip())
+				redirect_url = urllib.parse.urlparse(
+					"http://" + catProfile["redirect"].strip()
+				)
 			if not redirect_url.scheme == "https" and not redirect_url.scheme == "http":
 				return None
 			frag = redirect_url.fragment.split("&")
@@ -393,20 +400,20 @@ class Cattenbak:
 					# We're not supporting this anymore!
 					return None
 				endpoint = redirect_url._replace(fragment="").geturl()
-				if self.letswifi_stub:
-					use_stub = True
-					for stubless_host in self.stubless_hosts:
-						stubless_host = stubless_host
-						if stubless_host[0] == ".":
-							if redirect_url.hostname.endswith(stubless_host):
-								use_stub = False
-								break
-						else:
-							if redirect_url.hostname == stubless_host:
-								use_stub = False
-								break
+				if self.legacy_stub:
+					use_stub = False
+					for legacy_provider_host in self.legacy_provider_hosts:
+						if len(legacy_provider_host) == 0:
+							use_stub = True
+							break
+						if redirect_url.hostname == legacy_provider_host:
+							use_stub = True
+							break
+						if redirect_url.hostname.endswith("." + legacy_provider_host):
+							use_stub = True
+							break
 					if use_stub:
-						endpoint = self.letswifi_stub + endpoint[8:]
+						endpoint = self.legacy_stub + endpoint[8:]
 				return {
 					"id": "cat_profile_%s" % catProfile["id"],
 					"name": name,
@@ -481,42 +488,52 @@ class Cattenbak:
 		institutions = self.generateInstituteList(getProfilesFromCat(), old=True)
 		providers = self.generateInstituteList(getProfilesFromCat(), old=False)
 		return {
-			sigil: {
+			sigil_v2: {
 				"seq": seq(old_seq),
 				"institutions": institutions,
 				"providers": providers,
 				"apps": {},
-			}
+			},
+			sigil_v3: {
+				"seq": seq(old_seq),
+				"providers": providers,
+			},
 		}
 
 	def discoveryIsUpToDate(
 		self, old_discovery: Optional[Dict], new_discovery: Dict
 	) -> Optional[int]:
-		if old_discovery is None:
-			return None
-		if not sigil in old_discovery:
-			return None
+		try:
+			if old_discovery is None:
+				return None
+			if sigil_v3 in old_discovery:
+				old_discovery = old_discovery[sigil_v3]
+				new_discovery = new_discovery[sigil_v3]
+			elif sigil_v2 in old_discovery:
+				old_discovery = old_discovery[sigil_v2]
+				new_discovery = new_discovery[sigil_v2]
+			else:
+				return None
 
-		old_discovery = old_discovery[sigil]
-		new_discovery = new_discovery[sigil]
+			old_providers = (
+				old_discovery["providers"] if "providers" in old_discovery else None
+			)
+			new_providers = (
+				new_discovery["providers"] if "providers" in new_discovery else None
+			)
 
-		old_providers = (
-			old_discovery["providers"] if "providers" in old_discovery else None
-		)
-		new_providers = (
-			new_discovery["providers"] if "providers" in new_discovery else None
-		)
+			assert isinstance(new_providers, List)
+			if (
+				not isinstance(old_providers, List)
+				or old_providers is None
+				or new_providers is None
+			):
+				return None
 
-		assert isinstance(new_providers, List)
-		if (
-			not isinstance(old_providers, List)
-			or old_providers is None
-			or new_providers is None
-		):
-			return None
-
-		if old_providers == new_providers:
-			return old_discovery["seq"]
+			if old_providers == new_providers:
+				return old_discovery["seq"]
+		except Exception as e:
+			print(e)
 		return None
 
 
@@ -531,21 +548,21 @@ def parseArgs() -> Dict[str, str]:
 		help="path where to write V2 discovery file to fileystem",
 	)
 	parser.add_argument(
-		"--letswifi-stub",
+		"--legacy-stub",
 		nargs="?",
 		metavar="URL",
-		dest="letswifi_stub",
+		dest="legacy_stub",
 		default=None,
 		help="url prefix to put in front of the actual letswifi url",
 	)
 	parser.add_argument(
-		"--stubless-host",
+		"--legacy-provider-host",
 		action="extend",
 		nargs="+",
 		type=str,
 		metavar="HOST",
-		dest="stubless_host",
-		help="hostname that won't get prefixed with the stub",
+		dest="legacy_provider_hosts",
+		help="hostname that must be prefixed with the stub",
 	)
 	return vars(parser.parse_args())
 
@@ -554,17 +571,18 @@ if __name__ == "__main__":
 	args = parseArgs()
 	file = args["file_path"]
 	cattenbak = Cattenbak(
-		letswifi_stub=args["letswifi_stub"], stubless_hosts=args["stubless_host"]
+		legacy_stub=args["legacy_stub"],
+		legacy_provider_hosts=args["legacy_provider_hosts"],
 	)
 	old_discovery = {}
 	try:
 		with open(file, "r") as f:
 			old_discovery = json.load(f)
 			new_discovery = cattenbak.generateDiscovery(
-				old_seq=old_discovery[sigil]["seq"]
+				old_seq=old_discovery[sigil_v3]["seq"]
 			)
 	except:
-		print("Cannot read old discovery\r\n", file=sys.stderr)
+		print("Cannot read old discovery, generating new\r\n", file=sys.stderr)
 		new_discovery = cattenbak.generateDiscovery()
 	if seq := cattenbak.discoveryIsUpToDate(old_discovery, new_discovery):
 		print("Refresh not needed at seq %s\r\n" % (seq), file=sys.stderr)
