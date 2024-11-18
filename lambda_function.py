@@ -1,4 +1,4 @@
-from cattenbak import Cattenbak, sigil
+from cattenbak import Cattenbak, sigil_v2, sigil_v3
 import boto3
 import os
 import gzip
@@ -8,38 +8,57 @@ from typing import Optional, List, Any, Dict, Set, Union
 
 def lambda_handler(event, context) -> str:
 	s3 = boto3.client("s3")
-	stubless_hosts = []
-	if "s3_stubless_hosts_read_path" in os.environ:
-		stubless_hosts = json.loads(download_s3(s3, os.environ["s3_bucket"], os.environ["s3_stubless_hosts_read_path"]))
+	bucket = os.environ["s3_bucket"]
+
+	legacy_provider_hosts = []
+	if "legacy_provider_hosts" in os.environ:
+		legacy_provider_hosts = os.environ["legacy_provider_hosts"].split(",")
+	legacy_stub = os.environ["legacy_stub"] if "legacy_stub" in os.environ else None
 	cattenbak = Cattenbak(
-		letswifi_stub=os.environ["letswifi_stub"] if "letswifi_stub" in os.environ else None,
-		stubless_hosts=stubless_hosts,
+		legacy_provider_hosts=legacy_provider_hosts,
+		legacy_stub=legacy_stub,
 	)
 
-	old_discovery = download_s3(s3, os.environ["s3_bucket"], os.environ["s3_read_path"])
+	old_discovery = download_s3_json(s3, bucket, os.environ["s3_read_path_v3"])
 	try:
-		old_seq = old_discovery[sigil]["seq"]
+		old_seq = old_discovery[sigil_v3]["seq"]
 	except:
 		old_seq = None
 	new_discovery = cattenbak.generateDiscovery(old_seq=old_seq)
 	if seq := cattenbak.discoveryIsUpToDate(old_discovery, new_discovery):
 		result = "Refresh not needed at seq %s\r\n" % (seq)
+		print(result)  # Goes to CloudWatch
 	else:
-		upload_s3(s3, new_discovery, os.environ["s3_bucket"], os.environ["s3_write_path"])
-		result = "Uploaded discovery seq %s" % new_discovery[sigil]["seq"]
+		result = "Updating to discovery seq %s" % new_discovery[sigil_v3]["seq"]
+		print(result)  # Goes to CloudWatch
+		if "s3_write_path_v2" in os.environ:
+			discovery_v2 = {sigil_v2: new_discovery[sigil_v2]}
+			upload_s3_json(
+				s3,
+				discovery_v2,
+				bucket,
+				os.environ["s3_write_path_v2"],
+			)
+		if "s3_write_path_v3" in os.environ:
+			discovery_v3 = {sigil_v3: new_discovery[sigil_v3]}
+			upload_s3_json(
+				s3,
+				discovery_v3,
+				bucket,
+				os.environ["s3_write_path_v3"],
+			)
 
-	print(result)  # Goes to CloudWatch
 	return result  # Goes to Lambda UI when testing
 
 
-def upload_s3(s3, discovery: Dict, s3_bucket: str, s3_file: str) -> None:
+def upload_s3_json(s3, discovery: Dict, s3_bucket: str, s3_file: str) -> None:
 	discovery_body = gzip.compress(
 		json.dumps(
 			discovery,
-			separators=(",", ":"),
+			separators=(",", ":"),  # Prevent space after comma and colon
 			allow_nan=False,
-			sort_keys=True,
-			ensure_ascii=True,
+			sort_keys=True,  # Make output reproducable
+			ensure_ascii=True,  # Compresses better
 		).encode("ascii")
 		+ b"\r\n"
 	)
@@ -58,7 +77,7 @@ def upload_s3(s3, discovery: Dict, s3_bucket: str, s3_file: str) -> None:
 		)
 
 
-def download_s3(
+def download_s3_json(
 	s3, s3_bucket: str, s3_file: str
 ) -> Optional[Dict[str, Union[List, str, int]]]:
 	try:
@@ -79,8 +98,14 @@ def download_s3(
 			if response["ContentEncoding"] == "gzip":
 				compressed = True
 			else:
-				raise Exception("Unknown ContentEncoding: " + response["ContentEncoding"])
-		return json.loads(gzip.decompress(response["Body"].read()).decode("utf-8")) if compressed else response["Body"].read().decode("utf-8")
+				raise Exception(
+					"Unknown ContentEncoding: " + response["ContentEncoding"]
+				)
+		return (
+			json.loads(gzip.decompress(response["Body"].read()).decode("utf-8"))
+			if compressed
+			else response["Body"].read().decode("utf-8")
+		)
 	except json.decoder.JSONDecodeError as e:
 		print(e)
 		return None
