@@ -1,5 +1,6 @@
 from cattenbak import Cattenbak, sigil_v2, sigil_v3
 import boto3
+import brotlicffi as brotli
 import os
 import gzip
 import json
@@ -38,6 +39,7 @@ def lambda_handler(event, context) -> str:
 				discovery_v2,
 				bucket,
 				os.environ["s3_write_path_v2"],
+				"gzip",
 			)
 		if "s3_write_path_v3" in os.environ:
 			discovery_v3 = {sigil_v3: new_discovery[sigil_v3]}
@@ -46,13 +48,22 @@ def lambda_handler(event, context) -> str:
 				discovery_v3,
 				bucket,
 				os.environ["s3_write_path_v3"],
+				"br",
 			)
 
 	return result  # Goes to Lambda UI when testing
 
 
-def upload_s3_json(s3, discovery: Dict, s3_bucket: str, s3_file: str) -> None:
-	discovery_body = gzip.compress(
+def upload_s3_json(
+	s3, discovery: Dict, s3_bucket: str, s3_file: str, compressor: str
+) -> None:
+	if compressor == "gzip":
+		c = gzip
+	elif compressor == "br":
+		c = brotli
+	else:
+		raise Exception("Wrong compressor provided")
+	discovery_body = c.compress(
 		json.dumps(
 			discovery,
 			separators=(",", ":"),  # Prevent space after comma and colon
@@ -67,7 +78,7 @@ def upload_s3_json(s3, discovery: Dict, s3_bucket: str, s3_file: str) -> None:
 		Key=s3_file,
 		Body=discovery_body,
 		CacheControl="public, max-age=900, s-maxage=300, stale-while-revalidate=86400, stale-if-error=2592000",
-		ContentEncoding="gzip",
+		ContentEncoding=compressor,
 		ContentType="application/json",
 		ACL="public-read",
 	)
@@ -93,17 +104,19 @@ def download_s3_json(
 		return None
 
 	try:
-		compressed = False
+		c = None
 		if "ContentEncoding" in response:
 			if response["ContentEncoding"] == "gzip":
-				compressed = True
+				c = gzip
+			elif response["ContentEncoding"] == "br":
+				c = brotli
 			else:
 				raise Exception(
 					"Unknown ContentEncoding: " + response["ContentEncoding"]
 				)
 		return (
-			json.loads(gzip.decompress(response["Body"].read()).decode("utf-8"))
-			if compressed
+			json.loads(c.decompress(response["Body"].read()).decode("utf-8"))
+			if c
 			else response["Body"].read().decode("utf-8")
 		)
 	except json.decoder.JSONDecodeError as e:

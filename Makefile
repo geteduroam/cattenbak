@@ -7,25 +7,38 @@ LAMBDA_FUNCTION := cattenbak
 cattenbak/cattenbak.py: cattenbak/i18n.py cattenbak cattenbak.py
 	cp cattenbak.py cattenbak/
 
+cattenbak-lambda/cattenbak.py: cattenbak-lambda/i18n.py cattenbak-lambda cattenbak.py
+	cp cattenbak.py cattenbak-lambda/
+
 
 cattenbak/i18n.py: i18n.py cattenbak
 	cp i18n.py cattenbak/
+
+cattenbak-lambda/i18n.py: i18n.py cattenbak-lambda
+	cp i18n.py cattenbak-lambda/
 
 
 cattenbak: requirements.txt
 	rm -rf cattenbak
 	pip3 install -r requirements.txt -t ./cattenbak/
-	find ./cattenbak/ -name \*.so -delete
 	touch -c cattenbak
 
+cattenbak-lambda: requirements.txt
+	rm -rf cattenbak-lambda
+	pip3 install --platform=manylinux_2_17_aarch64 --python-version 3.11 --only-binary=:all: -r requirements.txt -t ./cattenbak-lambda/
+	touch -c cattenbak-lambda
 
-cattenbak.zip: lambda_function.py cattenbak/cattenbak.py
-	cp lambda_function.py cattenbak/
+
+cattenbak.zip: cattenbak/cattenbak.py
 	cd cattenbak; rm -rf ../cattenbak.zip; zip -9 -r ../cattenbak.zip .
+
+cattenbak-lambda.zip: lambda_function.py cattenbak-lambda/cattenbak.py
+	cp lambda_function.py cattenbak-lambda/
+	cd cattenbak-lambda; rm -rf ../cattenbak-lambda.zip; zip -9 -r ../cattenbak-lambda.zip .
 
 
 discovery.json: cattenbak/cattenbak.py
-	curl --compressed -sSLO https://discovery.eduroam.app/v2/discovery.json || true
+	curl --compressed -sSLO https://discovery.eduroam.app/v3/discovery.json || true
 	cattenbak/cattenbak.py --file-path discovery.json
 
 
@@ -59,7 +72,7 @@ deploy: cattenbak.zip
 
 
 clean:
-	rm -rf cattenbak cattenbak.zip discovery.json discovery.json.gz
+	rm -rf cattenbak cattenbak.zip cattenbak-lambda cattenbak-lambda.zip discovery.json discovery.json.gz
 .PHONY: clean
 
 
