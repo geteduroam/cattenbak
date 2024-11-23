@@ -104,6 +104,11 @@ class Cattenbak:
 				names,
 			)
 		)
+
+		# Remove any unnamed language that is a duplicate of a named language
+		namedLanguages = list(map(lambda n: None if not "lang" in n else n[""], languageList))
+		languageList = list(filter(lambda name: "lang" in name or not name[""] in namedLanguages, languageList))
+
 		unnamedLangIsSet = reduce(
 			lambda name, result: result or not "lang" in name, languageList, False
 		)
