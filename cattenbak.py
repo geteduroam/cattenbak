@@ -104,10 +104,24 @@ class Cattenbak:
 				names,
 			)
 		)
+		prioritisedTranslations = set(map(lambda name: None if "lang" in name else name[""], languageList))
+
+		for i in range(len(languageList) - 1, -1, -1):
+			lang_i = languageList[i]["lang"] if "lang" in languageList[i] else ""
+			for j in range(i - 1, -1, -1):
+				lang_j = languageList[j]["lang"] if "lang" in languageList[j] else ""
+				if lang_i == lang_j and languageList[i][""] == languageList[j][""]:
+					del languageList[i]
+					break
+
+		namedLanguages = list(filter(lambda x: x, map(lambda n: None if not "lang" in n else n[""], languageList)))
+		englishLanguages = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] != "en" else n[""], languageList)))
+		nonEnglishLanguages = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] == "en" else n[""], languageList)))
 
 		# Remove any unnamed language that is a duplicate of a named language
-		namedLanguages = list(map(lambda n: None if not "lang" in n else n[""], languageList))
 		languageList = list(filter(lambda name: "lang" in name or not name[""] in namedLanguages, languageList))
+		# Remove english if it is a copy of an existing language
+		languageList = list(filter(lambda name: ("lang" in name and not name["lang"] == "en") or not name[""] in nonEnglishLanguages, languageList))
 
 		unnamedLangIsSet = reduce(
 			lambda name, result: result or not "lang" in name, languageList, False
@@ -116,8 +130,10 @@ class Cattenbak:
 		countryLangs = getLanguagesForCountry(country)
 
 		if unnamedLangIsSet:
+			# If English is not set yet, we might set the unknown language to English, if no better matches show up
+			# Also, if this country has English as it's main language, probably all unknown langauges are English
+			localLanguage = None if englishLanguages and countryLangs != ["en"] else "en"
 			# Is there a language for this country that isn't set yet?
-			localLanguage = False
 			for language in countryLangs:
 				# If this language is not already in the list
 				if not list(
@@ -131,11 +147,7 @@ class Cattenbak:
 					break
 
 			if localLanguage:
-				# Here someone has set multiple languages, at least "en" and "any",
-				# but they have not set a language that is local to their own country! Weird..
-				# This could be because CAT doesn't allow you to set any language
-				# that CAT itself is not translated in.  So it could be a way to put both languages anyway,
-				# but it's not correct.  It's far more likely that they meant to do this:
+				# Set all unknown languages to the local language we found
 				languageList = list(
 					map(
 						lambda name: (
@@ -146,9 +158,11 @@ class Cattenbak:
 				)
 
 		def sorterEnhancer(d: Dict) -> int:
-			if not "lang" in d:
-				return 0
+			if d[""] in prioritisedTranslations:
+				return -1
 			if d["lang"] in countryLangs:
+				return 0
+			if not "lang" in d:
 				return 1
 			return 2
 
