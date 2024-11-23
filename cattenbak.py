@@ -341,15 +341,9 @@ class Cattenbak:
 			)
 		)
 
-		return {
+		result = {
 			"name": name,
 			"country": convertCatCountryToIsoCountry(country),
-			"geo": list(
-				map(
-					lambda x: self.geoCompress(x),
-					instData["geo"] if "geo" in instData else [],
-				)
-			),
 			"profiles": list(
 				filter(
 					lambda profile: self.checkProfile(profile),
@@ -365,6 +359,17 @@ class Cattenbak:
 				)
 			),
 		}
+		if old:
+			result["geo"] = (
+				list(
+					map(
+						lambda x: self.geoCompress(x),
+						instData["geo"] if "geo" in instData else [],
+					)
+				),
+			)
+
+		return result
 
 	def generateProfile(
 		self,
@@ -379,7 +384,7 @@ class Cattenbak:
 			else self.getLocalisedNameNewStyle(catProfile["names"], country)
 		)
 		if name == parentName or not name:
-			name = {} if old else []
+			name = {} if old else None
 
 		if catProfile["redirect"]:
 			redirect_url = urllib.parse.urlparse(catProfile["redirect"])
@@ -414,29 +419,35 @@ class Cattenbak:
 							break
 					if use_stub:
 						endpoint = self.legacy_stub + endpoint[8:]
-				return {
-					"id": "cat_profile_%s" % catProfile["id"],
-					"name": name,
-					"type": "letswifi",
-					"letswifi_endpoint": endpoint,
-				}
+				return removeNoneFromDictionary(
+					{
+						"id": "cat_profile_%s" % catProfile["id"],
+						"name": name,
+						"type": "letswifi",
+						"letswifi_endpoint": endpoint,
+					}
+				)
 			else:
-				return {
+				return removeNoneFromDictionary(
+					{
+						"id": "cat_profile_%s" % catProfile["id"],
+						"name": name,
+						"type": "webview",
+						"webview_endpoint": redirect_url.geturl(),
+					}
+				)
+		else:
+			return removeNoneFromDictionary(
+				{
 					"id": "cat_profile_%s" % catProfile["id"],
 					"name": name,
-					"type": "webview",
-					"webview_endpoint": redirect_url.geturl(),
+					"type": "eap-config",
+					"eapconfig_endpoint": "%s?action=downloadInstaller&device=eap-generic&profile=%s"
+					% (cat_api, catProfile["id"]),
+					"mobileconfig_endpoint": "%s?action=downloadInstaller&device=apple_global&profile=%s"
+					% (cat_api, catProfile["id"]),
 				}
-		else:
-			return {
-				"id": "cat_profile_%s" % catProfile["id"],
-				"name": name,
-				"type": "eap-config",
-				"eapconfig_endpoint": "%s?action=downloadInstaller&device=eap-generic&profile=%s"
-				% (cat_api, catProfile["id"]),
-				"mobileconfig_endpoint": "%s?action=downloadInstaller&device=apple_global&profile=%s"
-				% (cat_api, catProfile["id"]),
-			}
+			)
 
 	def geoCompress(self, geo: Dict) -> Dict:
 		# See https://xkcd.com/2170/
@@ -535,6 +546,10 @@ class Cattenbak:
 		except Exception as e:
 			print(e)
 		return None
+
+
+def removeNoneFromDictionary(dict: Dict) -> Dict:
+	return {k: v for k, v in dict.items() if v is not None}
 
 
 def parseArgs() -> Dict[str, str]:
