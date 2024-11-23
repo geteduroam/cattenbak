@@ -64,48 +64,6 @@ class Cattenbak:
 	def getLocalisedNameNewStyle(
 		self, names: List[Dict[str, str]], country: str
 	) -> Optional[List[Dict[str, str]]]:
-		languageDict = self.getLocalisedNameOldStyle(names, country)
-		if languageDict == None:
-			return None
-		anyLanguageDuplicate = False
-		for l, v in languageDict.items():
-			if l == "any":
-				continue
-			if v == languageDict["any"]:
-				anyLanguageDuplicate = l
-				break
-
-		if anyLanguageDuplicate:
-			languageDict.pop("any")
-
-		languageList = list(
-			map(
-				lambda item: (
-					{"": item[1]}
-					if item[0] == "any"
-					else {"": item[1], "lang": item[0]}
-				),
-				list(languageDict.items()),
-			)
-		)
-		# languageList = list(languageDict.items())
-
-		countryLangs = getLanguagesForCountry(country)
-
-		def sorterEnhancer(d: Dict) -> int:
-			if not "lang" in d:
-				return 0
-			if d["lang"] in countryLangs:
-				return 1
-			if d["lang"] == anyLanguageDuplicate:
-				return 2
-			if d["lang"] == "en":
-				return 3
-			return 4
-
-		languageList.sort(key=sorterEnhancer)
-		return languageList
-
 		if len(names) == 0:
 			return None
 		if len(names) == 1:
@@ -146,36 +104,24 @@ class Cattenbak:
 				names,
 			)
 		)
-		englishLangIsSet = (
-			len(
-				list(
-					filter(
-						lambda name: "lang" in name and name["lang"] == "en",
-						languageList,
-					)
-				)
-			)
-			> 0
-		)
-		defaultLangIsSet = (
-			len(list(filter(lambda name: not "lang" in name, languageList))) > 0
+		unnamedLangIsSet = reduce(
+			lambda name, result: result or not "lang" in name, languageList, False
 		)
 
 		countryLangs = getLanguagesForCountry(country)
 
-		if englishLangIsSet and defaultLangIsSet:
-			nonEnglishCountryLangs = list(filter(lambda l: not l == "en", countryLangs))
-
+		if unnamedLangIsSet:
 			# Is there a language for this country that isn't set yet?
 			localLanguage = False
-			for language in nonEnglishCountryLangs:
-				if not reduce(
-					lambda name, result: result
-					or "lang" in name
-					and name["lang"] == language,
-					languageList,
-					False,
+			for language in countryLangs:
+				# If this language is not already in the list
+				if not list(
+					filter(
+						lambda name: "lang" in name and name["lang"] == language,
+						languageList,
+					)
 				):
+					# We found a local language that is not set yet
 					localLanguage = language
 					break
 

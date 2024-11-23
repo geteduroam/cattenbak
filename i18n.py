@@ -6,8 +6,8 @@ def convertCatCountryToIsoCountry(country: str) -> str:
 	# but these are named "guest IdP" and "guest IdP Android"
 	# The actual "GÉANT Staff" profile has an NL country code,
 	# so let's also convert those other GEANT profiles to NL
-	if country == 'GEANT':
-		return 'NL'
+	if country == "GEANT":
+		return "NL"
 
 	# Otherwise use same country code as CAT
 	return country
@@ -52,7 +52,7 @@ def getLanguagesForCountry(country: str) -> List[str]:
 		"JP": ["jp"],
 		"KE": ["sw", "en"],
 		"KR": ["ko"],
-		"KS": ["sq", "sr"], # Kosovo according to KREN (Kosovo NREN)
+		"KS": ["sq", "sr"],  # Kosovo according to KREN (Kosovo NREN)
 		"LA": ["lo"],
 		"LI": ["de"],
 		"LK": ["si", "ta"],
@@ -90,7 +90,7 @@ def getLanguagesForCountry(country: str) -> List[str]:
 		"UK": ["en"],
 		"US": ["en", "es"],
 		"UY": ["es"],
-		"XK": ["sq", "sr"], # Kosovo according to ISO rules (X means temporary)
+		"XK": ["sq", "sr"],  # Kosovo according to ISO rules (X means temporary)
 		"ZA": ["en", "af", "zu", "xh", "nso", "tn", "st", "ts", "ss", "ve", "nr"],
 		"ZM": ["en", "ny", "bem"],
 	}
