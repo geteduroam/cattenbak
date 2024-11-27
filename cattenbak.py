@@ -43,11 +43,9 @@ def getFirstCommonMember(list1: List[str], list2: List[str]) -> Optional[str]:
 
 class Cattenbak:
 	def __init__(
-		self, legacy_stub: str = None, legacy_provider_hosts: List[str] = [""]
+		self, legacy_stub: str = None, legacy_provider_hosts: List[str] = []
 	):
 		self.legacy_stub = ""
-		if legacy_stub is None:
-			self.legacy_stub = ""
 		if legacy_stub:
 			stub_url = urllib.parse.urlparse(legacy_stub)
 			if not stub_url.scheme == "https":
@@ -58,7 +56,7 @@ class Cattenbak:
 			self.legacy_stub = legacy_stub
 
 		self.legacy_provider_hosts = (
-			[""] if legacy_provider_hosts is None else legacy_provider_hosts
+			[] if legacy_provider_hosts is None else legacy_provider_hosts
 		)
 
 	def getLocalisedNameNewStyle(
@@ -375,9 +373,6 @@ class Cattenbak:
 				if self.legacy_stub:
 					use_stub = False
 					for legacy_provider_host in self.legacy_provider_hosts:
-						if len(legacy_provider_host) == 0:
-							use_stub = True
-							break
 						if redirect_url.hostname == legacy_provider_host:
 							use_stub = True
 							break
