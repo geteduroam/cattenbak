@@ -71,9 +71,9 @@ class Cattenbak:
 			return list(
 				[
 					dict(
-						{"": names[0]["value"]}
+						{"display": names[0]["value"]}
 						if names[0]["lang"] == "C" or names[0]["lang"] == ""
-						else {"": names[0]["value"], "lang": names[0]["lang"]}
+						else {"display": names[0]["value"], "lang": names[0]["lang"]}
 					)
 				]
 			)
@@ -81,29 +81,29 @@ class Cattenbak:
 		languageList = list(
 			map(
 				lambda name: (
-					{"": name["value"]}
+					{"display": name["value"]}
 					if name["lang"] == "C" or name["lang"] == ""
-					else {"": name["value"], "lang": name["lang"]}
+					else {"display": name["value"], "lang": name["lang"]}
 				),
 				names,
 			)
 		)
-		prioritisedTranslations = set(map(lambda name: None if "lang" in name else name[""], languageList))
+		prioritisedTranslations = set(map(lambda name: None if "lang" in name else name["display"], languageList))
 
 		for i in range(len(languageList) - 1, -1, -1):
 			lang_i = languageList[i]["lang"] if "lang" in languageList[i] else ""
 			for j in range(i - 1, -1, -1):
 				lang_j = languageList[j]["lang"] if "lang" in languageList[j] else ""
-				if lang_i == lang_j and languageList[i][""] == languageList[j][""]:
+				if lang_i == lang_j and languageList[i]["display"] == languageList[j]["display"]:
 					del languageList[i]
 					break
 
 		# List of names that have a lang= tag connected to them
-		nonUnnamedNames = list(filter(lambda x: x, map(lambda n: None if not "lang" in n else n[""], languageList)))
+		nonUnnamedNames = list(filter(lambda x: x, map(lambda n: None if not "lang" in n else n["display"], languageList)))
 		# List of names that have a lang= tag, and that tag is not for English
-		nonEnglishNames = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] == "en" else n[""], languageList)))
+		nonEnglishNames = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] == "en" else n["display"], languageList)))
 		# List of names that have a lang= tag, and that tag IS for English
-		englishNames = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] != "en" else n[""], languageList)))
+		englishNames = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] != "en" else n["display"], languageList)))
 		# List of names that are in English, but the same name is also used for a non-English translation
 		# We found that many institutions copy their local language name to the English field as well, even if it's not in English
 		# If they do that, we will prioritize that name in their local language but remove the English version
@@ -111,13 +111,13 @@ class Cattenbak:
 
 		languageList = list(filter(lambda name:
 				# Remove any unnamed language that is a duplicate of a named language
-				("lang" in name or not name[""] in nonUnnamedNames)
+				("lang" in name or not name["display"] in nonUnnamedNames)
 				and
 				# Remove English if it is a copy of an existing non-English language
-				(not "lang" in name or name["lang"] != "en" or not name[""] in englishDuplicateNames)
+				(not "lang" in name or name["lang"] != "en" or not name["display"] in englishDuplicateNames)
 			, languageList))
 
-		englishLanguages = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] != "en" else n[""], languageList)))
+		englishLanguages = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] != "en" else n["display"], languageList)))
 
 		unnamedLangs = list(filter(lambda name: not "lang" in name, languageList))
 
@@ -155,11 +155,11 @@ class Cattenbak:
 				)
 
 		def sorterEnhancer(d: Dict) -> int:
-			if "lang" in d and d["lang"] in countryLangs and d[""] in englishDuplicateNames:
+			if "lang" in d and d["lang"] in countryLangs and d["display"] in englishDuplicateNames:
 				return -1
 			if "lang" in d and d["lang"] in countryLangs:
 				return 0
-			if d[""] in englishDuplicateNames:
+			if d["display"] in englishDuplicateNames:
 				return 1
 			if "lang" in d and d["lang"] == "en":
 				return 2
