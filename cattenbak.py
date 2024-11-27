@@ -115,26 +115,28 @@ class Cattenbak:
 					break
 
 		namedLanguages = list(filter(lambda x: x, map(lambda n: None if not "lang" in n else n[""], languageList)))
-		englishLanguages = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] != "en" else n[""], languageList)))
 		nonEnglishLanguages = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] == "en" else n[""], languageList)))
 
 		# Remove any unnamed language that is a duplicate of a named language
 		languageList = list(filter(lambda name: "lang" in name or not name[""] in namedLanguages, languageList))
 		# Remove english if it is a copy of an existing language
 		languageList = list(filter(lambda name: ("lang" in name and not name["lang"] == "en") or not name[""] in nonEnglishLanguages, languageList))
+		englishLanguages = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] != "en" else n[""], languageList)))
 
-		unnamedLangIsSet = reduce(
-			lambda name, result: result or not "lang" in name, languageList, False
-		)
+		unnamedLangs = list(filter(lambda name: not "lang" in name, languageList))
 
 		countryLangs = getLanguagesForCountry(country)
 
-		if unnamedLangIsSet:
+		if unnamedLangs:
 			# If English is not set yet, we might set the unknown language to English, if no better matches show up
 			# Also, if this country has English as it's main language, probably all unknown langauges are English
 			localLanguage = None if englishLanguages and countryLangs != ["en"] else "en"
 			# Is there a language for this country that isn't set yet?
-			for language in countryLangs:
+			# NOTE: In practice, we see that institutions use the "default" option
+			# sometimes for their countries primary language, and sometimes as a generic option,
+			# but rarely for the countries secondary or tertiary language.
+			# So we will now only consider the countries first language when replacing the generic option with the countries own language.
+			for language in countryLangs[:1]:
 				# If this language is not already in the list
 				if not list(
 					filter(
