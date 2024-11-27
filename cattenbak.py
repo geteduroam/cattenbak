@@ -168,6 +168,8 @@ class Cattenbak:
 			return 4
 
 		languageList.sort(key=sorterEnhancer)
+		for i in range(0, len(languageList)):
+			languageList[i][""] = languageList[i]["display"]
 		return languageList
 
 	def getLocalisedNameOldStyle(
