@@ -62,20 +62,9 @@ class Cattenbak:
 	def getLocalisedNameNewStyle(
 		self, names: List[Dict[str, str]], country: str
 	) -> Optional[List[Dict[str, str]]]:
-		if len(names) == 0:
-			return None
-		if len(names) == 1:
-			return list(
-				[
-					dict(
-						{"": names[0]["value"]}
-						if names[0]["lang"] == "C"
-						else {"": names[0]["value"], "lang": names[0]["lang"]}
-					)
-				]
-			)
+		# This input sanitation is no longer necessary:
+		# names = list(filter(lambda n: n["value"], names))
 
-		names = list(filter(lambda n: n["value"], names))
 		if len(names) == 0:
 			return None
 		if len(names) == 1:
@@ -95,8 +84,6 @@ class Cattenbak:
 					{"": name["value"]}
 					if not "lang" in name
 					or name["lang"] == "C"
-					or name["lang"] == "any"
-					or name["lang"] == ""
 					else {"": name["value"], "lang": name["lang"]}
 				),
 				names,
