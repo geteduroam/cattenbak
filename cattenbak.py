@@ -292,8 +292,8 @@ class Cattenbak:
 
 	def checkInstitution(self, institution: Dict):
 		return (
-			not institution["name"] is None and institution["profiles"]
-		)  # and not institution["country"] is None
+			"name" in institution and not institution["name"] is None and institution["profiles"] and not institution["country"] is None
+		)
 
 	def generateInstitution(
 		self, instData: Dict[str, Any], old: bool
