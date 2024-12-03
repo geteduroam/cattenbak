@@ -67,11 +67,15 @@ class Cattenbak:
 
 		if len(names) == 0:
 			return None
+
+		countryLangs = getLanguagesForCountry(country)
+
 		if len(names) == 1:
 			return list(
 				[
 					dict(
-						{"display": names[0]["value"]}
+						# If no language was set, assume it was the country's language
+						{"display": names[0]["value"], "lang": countryLangs[0]}
 						if names[0]["lang"] == "C" or names[0]["lang"] == ""
 						else {"display": names[0]["value"], "lang": names[0]["lang"]}
 					)
@@ -120,8 +124,6 @@ class Cattenbak:
 		englishLanguages = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] != "en" else n["display"], languageList)))
 
 		unnamedLangs = list(filter(lambda name: not "lang" in name, languageList))
-
-		countryLangs = getLanguagesForCountry(country)
 
 		if unnamedLangs:
 			# Some institutions use the default language to set the English text
