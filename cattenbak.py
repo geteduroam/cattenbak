@@ -42,9 +42,7 @@ def getFirstCommonMember(list1: List[str], list2: List[str]) -> Optional[str]:
 
 
 class Cattenbak:
-	def __init__(
-		self, legacy_stub: str = None, legacy_provider_hosts: List[str] = []
-	):
+	def __init__(self, legacy_stub: str = None, legacy_provider_hosts: List[str] = []):
 		self.legacy_stub = ""
 		if legacy_stub:
 			stub_url = urllib.parse.urlparse(legacy_stub)
@@ -92,42 +90,93 @@ class Cattenbak:
 				names,
 			)
 		)
-		prioritisedTranslations = set(map(lambda name: None if "lang" in name else name["display"], languageList))
+		prioritisedTranslations = set(
+			map(lambda name: None if "lang" in name else name["display"], languageList)
+		)
 
 		for i in range(len(languageList) - 1, -1, -1):
 			lang_i = languageList[i]["lang"] if "lang" in languageList[i] else ""
 			for j in range(i - 1, -1, -1):
 				lang_j = languageList[j]["lang"] if "lang" in languageList[j] else ""
-				if lang_i == lang_j and languageList[i]["display"] == languageList[j]["display"]:
+				if (
+					lang_i == lang_j
+					and languageList[i]["display"] == languageList[j]["display"]
+				):
 					del languageList[i]
 					break
 
 		# List of names that have a lang= tag connected to them
-		nonUnnamedNames = list(filter(lambda x: x, map(lambda n: None if not "lang" in n else n["display"], languageList)))
+		nonUnnamedNames = list(
+			filter(
+				lambda x: x,
+				map(lambda n: None if not "lang" in n else n["display"], languageList),
+			)
+		)
 		# List of names that have a lang= tag, and that tag is not for English
-		nonEnglishNames = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] == "en" else n["display"], languageList)))
+		nonEnglishNames = list(
+			filter(
+				lambda x: x,
+				map(
+					lambda n: (
+						None if not "lang" in n or n["lang"] == "en" else n["display"]
+					),
+					languageList,
+				),
+			)
+		)
 		# List of names that have a lang= tag, and that tag IS for English
-		englishNames = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] != "en" else n["display"], languageList)))
+		englishNames = list(
+			filter(
+				lambda x: x,
+				map(
+					lambda n: (
+						None if not "lang" in n or n["lang"] != "en" else n["display"]
+					),
+					languageList,
+				),
+			)
+		)
 		# List of names that are in English, but the same name is also used for a non-English translation
 		# We found that many institutions copy their local language name to the English field as well, even if it's not in English
 		# If they do that, we will prioritize that name in their local language but remove the English version
-		englishDuplicateNames = list(filter(lambda x: x in nonEnglishNames, englishNames))
+		englishDuplicateNames = list(
+			filter(lambda x: x in nonEnglishNames, englishNames)
+		)
 
-		languageList = list(filter(lambda name:
+		languageList = list(
+			filter(
+				lambda name:
 				# Remove any unnamed language that is a duplicate of a named language
-				("lang" in name or not name["display"] in nonUnnamedNames)
-				and
+				("lang" in name or not name["display"] in nonUnnamedNames) and
 				# Remove English if it is a copy of an existing non-English language
-				(not "lang" in name or name["lang"] != "en" or not name["display"] in englishDuplicateNames)
-			, languageList))
+				(
+					not "lang" in name
+					or name["lang"] != "en"
+					or not name["display"] in englishDuplicateNames
+				),
+				languageList,
+			)
+		)
 
-		englishLanguages = list(filter(lambda x: x, map(lambda n: None if not "lang" in n or n["lang"] != "en" else n["display"], languageList)))
+		englishLanguages = list(
+			filter(
+				lambda x: x,
+				map(
+					lambda n: (
+						None if not "lang" in n or n["lang"] != "en" else n["display"]
+					),
+					languageList,
+				),
+			)
+		)
 
 		unnamedLangs = list(filter(lambda name: not "lang" in name, languageList))
 
 		if unnamedLangs:
 			# Some institutions use the default language to set the English text
-			localLanguage = None if englishLanguages and countryLangs != ["en"] else "en"
+			localLanguage = (
+				None if englishLanguages and countryLangs != ["en"] else "en"
+			)
 			# Is there a language for this country that isn't set yet?
 			# NOTE: In practice, we see that institutions use the "default" option
 			# sometimes for their countries primary language, and sometimes as a generic option,
@@ -157,7 +206,11 @@ class Cattenbak:
 				)
 
 		def sorterEnhancer(d: Dict) -> int:
-			if "lang" in d and d["lang"] in countryLangs and d["display"] in englishDuplicateNames:
+			if (
+				"lang" in d
+				and d["lang"] in countryLangs
+				and d["display"] in englishDuplicateNames
+			):
 				return -1
 			if "lang" in d and d["lang"] in countryLangs:
 				return 0
@@ -292,7 +345,10 @@ class Cattenbak:
 
 	def checkInstitution(self, institution: Dict):
 		return (
-			"name" in institution and not institution["name"] is None and institution["profiles"] and not institution["country"] is None
+			"name" in institution
+			and not institution["name"] is None
+			and institution["profiles"]
+			and not institution["country"] is None
 		)
 
 	def generateInstitution(
@@ -309,30 +365,36 @@ class Cattenbak:
 			)
 		)
 
-		return removeNoneFromDictionary({
-			"name": name,
-			"country": convertCatCountryToIsoCountry(country),
-			"geo": list(
-					map(
-						lambda x: self.geoCompress(x),
-						instData["geo"] if "geo" in instData else [],
+		return removeNoneFromDictionary(
+			{
+				"name": name,
+				"country": convertCatCountryToIsoCountry(country),
+				"geo": (
+					list(
+						map(
+							lambda x: self.geoCompress(x),
+							instData["geo"] if "geo" in instData else [],
+						)
 					)
-				) if old else None,
-			"profiles": list(
-				filter(
-					lambda profile: self.checkProfile(profile),
-					map(
-						lambda catProfile: self.generateProfile(
-							catProfile=catProfile,
-							country=convertCatCountryToIsoCountry(country),
-							parentName=name,
-							old=old,
+					if old
+					else None
+				),
+				"profiles": list(
+					filter(
+						lambda profile: self.checkProfile(profile),
+						map(
+							lambda catProfile: self.generateProfile(
+								catProfile=catProfile,
+								country=convertCatCountryToIsoCountry(country),
+								parentName=name,
+								old=old,
+							),
+							instData["profiles"],
 						),
-						instData["profiles"],
-					),
-				)
-			),
-		})
+					)
+				),
+			}
+		)
 
 	def generateProfile(
 		self,
