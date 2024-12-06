@@ -309,9 +309,15 @@ class Cattenbak:
 			)
 		)
 
-		result = {
+		return removeNoneFromDictionary({
 			"name": name,
 			"country": convertCatCountryToIsoCountry(country),
+			"geo": list(
+					map(
+						lambda x: self.geoCompress(x),
+						instData["geo"] if "geo" in instData else [],
+					)
+				) if old else None,
 			"profiles": list(
 				filter(
 					lambda profile: self.checkProfile(profile),
@@ -326,18 +332,7 @@ class Cattenbak:
 					),
 				)
 			),
-		}
-		if old:
-			result["geo"] = (
-				list(
-					map(
-						lambda x: self.geoCompress(x),
-						instData["geo"] if "geo" in instData else [],
-					)
-				),
-			)
-
-		return result
+		})
 
 	def generateProfile(
 		self,
