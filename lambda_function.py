@@ -10,6 +10,7 @@ def lambda_handler(event, context) -> str:
 	s3 = boto3.client("s3")
 	bucket = os.environ["s3_bucket"]
 	cache_control = os.environ["cache_control"]
+	minimal_app_version = os.environ["minimal_app_version"]
 
 	legacy_provider_hosts = []
 	if "legacy_provider_hosts" in os.environ:
@@ -25,7 +26,9 @@ def lambda_handler(event, context) -> str:
 		old_seq = old_discovery[sigil_v3]["seq"]
 	except:
 		old_seq = None
-	new_discovery = cattenbak.generateDiscovery(old_seq=old_seq)
+	new_discovery = cattenbak.generateDiscovery(
+		old_seq=old_seq, minimal_app_version=minimal_app_version
+	)
 	if seq := cattenbak.discoveryIsUpToDate(old_discovery, new_discovery):
 		result = "Refresh not needed at seq %s\r\n" % (seq)
 		print("%s\n" % result)  # Goes to CloudWatch

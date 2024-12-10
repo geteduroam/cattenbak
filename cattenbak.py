@@ -3,8 +3,9 @@ import requests
 import json
 import datetime
 import argparse
-import urllib.parse
+from urllib.parse import urlparse, parse_qs
 import sys
+import re
 from functools import reduce
 from typing import Optional, List, Any, Dict, Set
 from i18n import getLanguagesForCountry, convertCatCountryToIsoCountry
@@ -45,7 +46,7 @@ class Cattenbak:
 	def __init__(self, legacy_stub: str = None, legacy_provider_hosts: List[str] = []):
 		self.legacy_stub = ""
 		if legacy_stub:
-			stub_url = urllib.parse.urlparse(legacy_stub)
+			stub_url = urlparse(legacy_stub)
 			if not stub_url.scheme == "https":
 				raise ValueError("legacy_stub must be an https:// URL prefix")
 		if legacy_stub and legacy_stub[-1] != "/":
@@ -412,16 +413,14 @@ class Cattenbak:
 			name = {} if old else None
 
 		if catProfile["redirect"]:
-			redirect_url = urllib.parse.urlparse(catProfile["redirect"])
+			redirect_url = urlparse(catProfile["redirect"])
 			if not redirect_url.scheme:
 				# If we use the scheme variable in urlparse, it will set the hostname as path
 				# So we have to do this a bit more old fashioned
-				redirect_url = urllib.parse.urlparse(
-					"http://" + catProfile["redirect"].strip()
-				)
+				redirect_url = urlparse("http://" + catProfile["redirect"].strip())
 			if not redirect_url.scheme == "https" and not redirect_url.scheme == "http":
 				return None
-			frag = redirect_url.fragment.split("&")
+			frag = re.split(r"[&;]+", redirect_url.fragment)
 			if "letswifi" in frag:
 				if not redirect_url.scheme == "https":
 					# We only support HTTPS!
@@ -504,7 +503,7 @@ class Cattenbak:
 			)
 		)
 
-	def generateDiscovery(self, old_seq=None) -> Dict:
+	def generateDiscovery(self, old_seq=None, minimal_app_version="") -> Dict:
 		def seq(old_seq: int = None) -> str:
 			candidate_seq = int(datetime.datetime.utcnow().strftime("%Y%m%d00"))
 			if old_seq is None:
@@ -518,8 +517,13 @@ class Cattenbak:
 
 			return seq
 
-		institutions = self.generateInstituteList(getProfilesFromCat(), old=True)
-		providers = self.generateInstituteList(getProfilesFromCat(), old=False)
+		parsed_minimal_app_version = parse_qs(
+			minimal_app_version, strict_parsing=True, separator=";"
+		)
+
+		profiles_from_cat = getProfilesFromCat()
+		institutions = self.generateInstituteList(profiles_from_cat, old=True)
+		providers = self.generateInstituteList(profiles_from_cat, old=False)
 		return {
 			sigil_v2: {
 				"seq": seq(old_seq),
@@ -530,6 +534,9 @@ class Cattenbak:
 			sigil_v3: {
 				"seq": seq(old_seq),
 				"providers": providers,
+				"apps": {
+					k: {"minimal_version": v[0]} for k, v in parsed_minimal_app_version.items()
+				},
 			},
 		}
 
@@ -554,6 +561,16 @@ class Cattenbak:
 			new_providers = (
 				new_discovery["providers"] if "providers" in new_discovery else None
 			)
+			old_apps = (
+				old_discovery["minimalAppVersion"]
+				if "minimalAppVersion" in old_discovery
+				else None
+			)
+			new_apps = (
+				new_discovery["minimalAppVersion"]
+				if "minimalAppVersion" in new_discovery
+				else None
+			)
 
 			assert isinstance(new_providers, List)
 			if (
@@ -563,7 +580,7 @@ class Cattenbak:
 			):
 				return None
 
-			if old_providers == new_providers:
+			if old_providers == new_providers and old_apps == new_apps:
 				return old_discovery["seq"]
 		except Exception as e:
 			print(e)
@@ -601,6 +618,13 @@ def parseArgs() -> Dict[str, str]:
 		dest="legacy_provider_hosts",
 		help="hostname that must be prefixed with the stub",
 	)
+	parser.add_argument(
+		"--minimal-app-version",
+		nargs="?",
+		type=str,
+		dest="minimal_app_version",
+		help="list of minimal app versions, separated by semicolon; client.id=1.2.3",
+	)
 	return vars(parser.parse_args())
 
 
@@ -616,11 +640,14 @@ if __name__ == "__main__":
 		with open(file, "r") as f:
 			old_discovery = json.load(f)
 			new_discovery = cattenbak.generateDiscovery(
-				old_seq=old_discovery[sigil_v3]["seq"]
+				old_seq=old_discovery[sigil_v3]["seq"],
+				minimal_app_version=args["minimal_app_version"],
 			)
 	except:
 		print("Cannot read old discovery, generating new\r\n", file=sys.stderr)
-		new_discovery = cattenbak.generateDiscovery()
+		new_discovery = cattenbak.generateDiscovery(
+			minimal_app_version=args["minimal_app_version"]
+		)
 	if seq := cattenbak.discoveryIsUpToDate(old_discovery, new_discovery):
 		print("Refresh not needed at seq %s\r\n" % (seq), file=sys.stderr)
 	else:
