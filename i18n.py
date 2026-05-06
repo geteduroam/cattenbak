@@ -96,6 +96,6 @@ def getLanguagesForCountry(country: str) -> List[str]:
 	}
 	if not country in d:
 		print("Country %s unknown\n" % country)
-		return "en"
+		return ["en"]
 		raise Exception("Country %s unknown" % country)
 	return d[country] if country in d else []
